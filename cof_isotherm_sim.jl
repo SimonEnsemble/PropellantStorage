@@ -12,7 +12,7 @@ frame = Framework(crystal)
 strip_numbers_from_atom_labels!(frame)
 
 temp =  298.0 # K
-ljff = LJForceField("UFF.csv")
+forcefield = LJForceField("Dreiding.csv", mixing_rules="Lorentz-Berthelot")
 
 xe = Molecule("Xe")
 
@@ -21,6 +21,6 @@ pressures = 10 .^ range(-2, stop=log10(300), length=15) # bar
 n_sample_cycles = 25000
 n_burn_cycles = 25000
 
-adsorption_data = adsorption_isotherm(frame, xe, temp, pressures,
-                    ljff, n_burn_cycles=n_burn_cycles, n_sample_cycles=n_sample_cycles,
-                    eos=:PengRobinson)
+adsorption_data = adsorption_isotherm(frame, xe, temp, pressures, forcefield, 
+		n_burn_cycles=n_burn_cycles, n_sample_cycles=n_sample_cycles,
+                eos=:PengRobinson)

@@ -7,11 +7,9 @@ CH4,190.56,45.99,0.011
 H2,32.98,12.93,-0.217
 Kr,209.40,55.00,0.005
 Xe,289.733,58.420,0.00363
-
 # Values taken from a more complete list given in
 # R. C. Reid, J. M. Prausnitz, and B. E. Poling, 2001,
 # The Properties of Gases and Liquids, 5th Ed. New York: McGraw-Hill.
-
 # values for Xe are taken from:
 # Eric W. Lemmon, Mark O. McLinden and Daniel G. Friend, "Thermophysical Properties of Fluid Systems" in NIST Chemistry WebBook,
 #	 NIST Standard Reference Database Number 69, Eds. P.J. Linstrom and W.G. Mallard, National Institute of Standards and Technology,

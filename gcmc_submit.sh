@@ -19,4 +19,4 @@
 
 # print date and time
 date
-~/julia-1.3.0/bin/julia -p 4 cof_isotherm_sim.jl xtal
+~/julia-1.3.0/bin/julia -p 4 cof_isotherm_sim.jl $xtal

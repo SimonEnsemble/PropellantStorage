@@ -12,7 +12,7 @@ frame = Framework(crystal)
 strip_numbers_from_atom_labels!(frame)
 
 temp =  298.0 # K
-forcefield = LJForceField("Dreiding.csv", mixing_rules="Lorentz-Berthelot")
+forcefield = LJForceField("Dreiding.csv", cutoffradius=14.0, mixing_rules="Lorentz-Berthelot")
 
 xe = Molecule("Xe")
 

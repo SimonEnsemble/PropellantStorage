@@ -21,6 +21,6 @@ pressures = 10 .^ range(-2, stop=log10(300), length=15) # bar
 n_sample_cycles = 25000
 n_burn_cycles = 25000
 
-adsorption_data = adsorption_isotherm(frame, xe, temp, pressures, forcefield, 
+adsorption_data = adsorption_isotherm(frame, xe, temp, pressures, forcefield,
 		n_burn_cycles=n_burn_cycles, n_sample_cycles=n_sample_cycles,
                 eos=:PengRobinson)

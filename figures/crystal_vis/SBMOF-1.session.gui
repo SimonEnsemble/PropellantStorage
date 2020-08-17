@@ -10,7 +10,7 @@
             <Field name="smartFileGrouping" type="bool">false</Field>
             <Field name="showDotFiles" type="bool">false</Field>
             <Object name="recentpaths">
-                <Field name="localhost" type="stringVector">"C:\Users\Mel\LLNL\VisIt%323.1.2" "Z:\.julia\dev\PropellantStorage\figures\crystal_vis" "C:\Users\Mel\Documents\VisIt" </Field>
+                <Field name="localhost" type="stringVector">"Z:\.julia\dev\PropellantStorage\figures\crystal_vis" "C:\Users\Mel\LLNL\VisIt%323.1.2" "C:\Users\Mel\Documents\VisIt" </Field>
             </Object>
         </Object>
         <Object name="AppearanceAttributes">
@@ -26,20 +26,22 @@
             <Field name="defaultStyle" type="string">Windows</Field>
             <Field name="defaultOrientation" type="int">0</Field>
         </Object>
-        <Field name="postWhenShown" type="bool">false</Field>
-        <Object name="File open">
-            <Field name="x" type="int">126</Field>
-            <Field name="y" type="int">490</Field>
-            <Field name="width" type="int">530</Field>
-            <Field name="height" type="int">441</Field>
+        <Object name="Annotation">
+            <Field name="x" type="int">107</Field>
+            <Field name="y" type="int">295</Field>
+            <Field name="width" type="int">487</Field>
+            <Field name="height" type="int">720</Field>
             <Field name="visible" type="bool">false</Field>
+            <Field name="posted" type="bool">false</Field>
+            <Field name="activeTab" type="int">0</Field>
         </Object>
+        <Field name="postWhenShown" type="bool">false</Field>
         <Object name="Information">
-            <Field name="x" type="int">126</Field>
-            <Field name="y" type="int">490</Field>
+            <Field name="x" type="int">122</Field>
+            <Field name="y" type="int">485</Field>
             <Field name="width" type="int">408</Field>
             <Field name="height" type="int">296</Field>
-            <Field name="visible" type="bool">true</Field>
+            <Field name="visible" type="bool">false</Field>
         </Object>
         <Object name="MainWin">
             <Field name="x" type="int">0</Field>
@@ -49,8 +51,8 @@
             <Field name="SPLITTER_VALUES_V2" type="floatVector">0 0.5426967 0.452809 </Field>
         </Object>
         <Object name="CreateBonds operator attributes">
-            <Field name="x" type="int">126</Field>
-            <Field name="y" type="int">490</Field>
+            <Field name="x" type="int">122</Field>
+            <Field name="y" type="int">485</Field>
             <Field name="width" type="int">364</Field>
             <Field name="height" type="int">467</Field>
             <Field name="visible" type="bool">false</Field>

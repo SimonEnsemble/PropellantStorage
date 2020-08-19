@@ -1,9 +1,10 @@
 #!/bin/bash
+module load slurm
 
-for xtal in COF-103.cif SBMOF-1.cssr NiPyC2.cif
+for xtal in SBMOF-1.cssr NiPyC2.cif COF-103_simulated.cif
 do
     echo "submitting job for $xtal"
-    sbatch -J $xtal -A simon-grp -c4\
+    sbatch -J $xtal -A simon-grp -p mime5 -c 16 \
     -o "$xtal.o" -e "$xtal.e" --export=xtal="$xtal" gcmc_submit.sh
 done
 

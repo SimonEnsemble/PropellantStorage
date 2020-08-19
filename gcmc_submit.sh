@@ -4,4 +4,4 @@
 # default is to use the users home directory
 # print date and time
 date
-~/julia-1.4.2/bin/julia -p 4 cof_isotherm_sim.jl $xtal
+~/julia-1.4.2/bin/julia -p 16 cof_isotherm_sim.jl $xtal

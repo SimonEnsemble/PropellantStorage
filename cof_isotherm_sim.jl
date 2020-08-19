@@ -13,14 +13,19 @@ strip_numbers_from_atom_labels!(frame)
 
 temp =  298.0 # K
 forcefield = LJForceField("Dreiding.csv", cutoffradius=14.0, mixing_rules="Lorentz-Berthelot")
+# forcefield = LJForceField("UFF.csv", cutoffradius=14.0, mixing_rules="Lorentz-Berthelot")
 
 xe = Molecule("Xe")
 
-pressures = 10 .^ range(-2, stop=log10(300), length=15) # bar
+pmin  = -2  # log10 of minimum pressure in bar
+pmax  = 300 # actual value of maximum pressure in bar
+nstep = 15  # number of steps from pmin to pmax  
+pressures = 10 .^ range(pmin, stop=log10(pmax), length=nstep) # bar
 
 n_sample_cycles = 25000
 n_burn_cycles = 25000
 
 adsorption_data = adsorption_isotherm(frame, xe, temp, pressures, forcefield,
-		n_burn_cycles=n_burn_cycles, n_sample_cycles=n_sample_cycles,
-                eos=:PengRobinson)
+		                              n_burn_cycles=n_burn_cycles, 
+                                      n_sample_cycles=n_sample_cycles,
+                                      eos=:PengRobinson)

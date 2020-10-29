@@ -437,6 +437,10 @@ begin
 	    return 4.0 * π * r(P) ^ 2.0 * t(P) * ρ_t
 	end
 	
+	function tankage_fract(P::Float64)
+		return mₜ(P) / mass_desired_xe_propellant
+	end
+	
 	# optimum pressure and mass of vessel
 	# input:
 	#       none
@@ -493,6 +497,10 @@ begin
 	#       mₐ [=] kg
 	function mₐ(P::Float64, xtal::String) # ads Xe storage (of course)
 	    return xtal_to_ρ[xtal] * mol_desired_xe_propellant / ρ_xe_ads(P, xtal)
+	end
+	
+	function tankage_fract(P::Float64, xtal::String)
+		return (mₜ(P, xtal) + mₐ(P, xtal))/ mass_desired_xe_propellant
 	end
 	
 	# optimum pressure and mass of vessel
@@ -606,6 +614,7 @@ begin
 
 			@assert isapprox(res.minimizer, P_opt, atol=1e-6)
 			@assert res.minimum / mass_desired_xe_propellant ≈ tf_opt
+			@assert tankage_fract(P_opt, xtal) ≈ tf_opt
 		end
 		return "tests pass"
 	end
@@ -881,7 +890,7 @@ function materials_space_viz()
 	xlim(left=0.0)
 	zlim(bottom=0.0)
 	legend(bbox_to_anchor=(1.05, 1), borderaxespad=5)
-	ax.view_init(elev=20.0, azim=45)
+	# ax.view_init(elev=20.0, azim=45)
 	tight_layout()
 	savefig("figz/material_space.pdf", bbox_inches="tight")
 	gcf()
@@ -889,6 +898,37 @@ end
 
 # ╔═╡ 53ea8fba-189f-11eb-381f-293a22ca726a
 materials_space_viz()
+
+# ╔═╡ 47eef0be-1973-11eb-399a-a5657c838de7
+function silver_lining()
+	
+	Ps = range(0.0, 50.0, length=100)
+	fig, axs = subplots(2, 1, sharex=true)
+	axs[2].set_xlabel(L"storage pressure, $P$ [bar]")
+	
+	# tf 
+	axs[1].set_ylabel("tankage fraction")
+	for xtal_name in xtal_names
+		tf_ads = tankage_fract.(Ps, xtal_name)
+		axs[1].plot(Ps, tf_ads, color=xtal_to_color[xtal_name])
+	end
+	axs[1].plot(Ps, tankage_fract.(Ps), linestyle="--", color="gray")
+	axs[1].set_yscale("log")
+	
+	# r
+	axs[2].set_ylabel(L"radius, $r$, [m]")
+	for xtal_name in xtal_names
+		r_ads = r.(Ps, xtal_name)
+		axs[2].plot(Ps, r_ads, color=xtal_to_color[xtal_name])
+	end
+	axs[2].plot(Ps, r.(Ps), linestyle="--", color="gray")
+	
+	axs[1].set_xlim(minimum(Ps), maximum(Ps))
+	gcf()
+end
+
+# ╔═╡ aa7d343e-1973-11eb-094e-735edc33dd81
+silver_lining()
 
 # ╔═╡ Cell order:
 # ╟─54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
@@ -951,3 +991,5 @@ materials_space_viz()
 # ╠═11b18cca-0f33-11eb-2556-f946a9ac7d0b
 # ╠═e9c0dacc-189e-11eb-0a0b-49ea73af6ef7
 # ╠═53ea8fba-189f-11eb-381f-293a22ca726a
+# ╠═47eef0be-1973-11eb-399a-a5657c838de7
+# ╠═aa7d343e-1973-11eb-094e-735edc33dd81

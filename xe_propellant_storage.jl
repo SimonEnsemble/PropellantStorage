@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.4
+# v0.12.10
 
 using Markdown
 using InteractiveUtils
@@ -83,8 +83,8 @@ const Pc = 58.420 # bar, from NIST
 
 # ╔═╡ fdd5dc94-0b65-11eb-1907-47bbff769958
 begin
-	df_xe = vcat(CSV.read(joinpath("data", "NIST_data", "low_pressure_xenon_NIST_data.txt"))[2:end, 2:3],
-	             CSV.read(joinpath("data", "NIST_data", "xenon_NIST_data.txt"))[:, 2:3])
+	df_xe = vcat(CSV.read(joinpath("data", "NIST_data", "low_pressure_xenon_NIST_data.txt"), DataFrame)[2:end, 2:3],
+	             CSV.read(joinpath("data", "NIST_data", "xenon_NIST_data.txt"), DataFrame)[:, 2:3])
 	df_xe[:, Symbol("Density (mol/m³)")] = df_xe[:, Symbol("Density (mol/l)")] * 1000 # convert L to m³
 	sort!(df_xe, Symbol("Pressure (bar)"))
 	
@@ -190,7 +190,7 @@ begin
 			isotherm_filename = joinpath(PATH_TO_EXP_ISOTHERMS, xtal_name, "Xe.csv")
 		end
 		
-		xe_isotherms[xtal_name] = CSV.read(isotherm_filename; copycols=true)
+		xe_isotherms[xtal_name] = CSV.read(isotherm_filename, DataFrame; copycols=true)
 	    # remove hysteresis branch manually
 	    if xtal_name == "FMOF-Cu" 
 	        deleterows!(xe_isotherms[xtal_name], 15:24)

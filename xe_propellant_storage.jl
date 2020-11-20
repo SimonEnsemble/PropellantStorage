@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.10
+# v0.12.11
 
 using Markdown
 using InteractiveUtils
@@ -68,7 +68,7 @@ begin
 	# Universal Gas Constant:
 	const R = 8.3144598e-5; # m³-bar/(K-mol)
 	
-	const xe_atomic_mass = 131.293 / 1000    # kg Xe/ mol Xe
+	const xe_atomic_mass = 131.293 / 1000    # kg Xe/ mol Xe (molar mass)
 	# common amount of xenon gas required to bring into space [1].
 	const mass_desired_xe_propellant = 100.0 # kg Xe
 	const mol_desired_xe_propellant = mass_desired_xe_propellant / xe_atomic_mass # mol Xe
@@ -220,20 +220,20 @@ begin
 	
 	# pressure conversions to bar
 	pressure_conversion[Symbol("pressure (bar)")] = 1.0 # (1 bar) / (1 bar)
-	pressure_conversion[Symbol("P(bar)")] = 1.0 # (1 bar) / (1 bar)
+	pressure_conversion[Symbol("P(bar)")]  = 1.0 # (1 bar) / (1 bar)
 	# pressure_conversion[Symbol("fugacity (bar)")] = 1.0 # (1 bar) / (1 bar)
 	pressure_conversion[Symbol("P(mbar)")] = 1 / 1000 # (1 bar) / (1000 mbar)
-	pressure_conversion[Symbol("P(kPa)")] = 1 / 100 # (1 bar) / (100 kPa)
+	pressure_conversion[Symbol("P(kPa)")]  = 1 / 100 # (1 bar) / (100 kPa)
 	pressure_conversion[Symbol("P(torr)")] = 1 / 750.062 # (1 bar) / (750.062 torr)
-	pressure_conversion[Symbol("P(atm)")] = 1 / 0.986923 # (1 bar) / (0.986923 atm)
-	pressure_conversion[Symbol("P(mmHg)")] = 1 / 750
+	pressure_conversion[Symbol("P(atm)")]  = 1 / 0.986923 # (1 bar) / (0.986923 atm)
+	pressure_conversion[Symbol("P(mmHg)")] = 1 / 750.062 # (1 bar) / (750.026 mmHg)
 	
 	# loading conversions to mol/kg
 	# these conversion factors will put the quantity into mmol/g which can then be multiplied by the crystal density 
-	loading_conversion[Symbol("L(mmol/g)")] = 1.0 # (1 mol/kg) / (1 mmol/g)
+	loading_conversion[Symbol("L(mmol/g)")]    = 1.0 # (1 mol/kg) / (1 mmol/g)
 	loading_conversion[Symbol("⟨N⟩ (mmol/g)")] = 1.0 # (1 mol/kg) / (1 mmol/g)
-	loading_conversion[Symbol("L(ccSTP/g)")] = 1 / 22.4 # (cc STP /g) (1000 g /kg) (1 mol/ 22.4 L STP) (1 L / 1000 cc)
-	loading_conversion[Symbol("L(cm3STP/g)")] = 1 / 22.4
+	loading_conversion[Symbol("L(ccSTP/g)")]   = 1 / 22.4 # (cc STP /g) (1000 g /kg) (1 mol/ 22.4 L STP) (1 L / 1000 cc)
+	loading_conversion[Symbol("L(cm3STP/g)")]  = 1 / 22.4
 	# [(% mass) / 100 g Xe / g MOF](1 mol / MW_Xe g) (1000 g /1 kg)
 	loading_conversion[:PercentMass] = 1000.0 / 131.1 / 100.0
 	# this one is an exception where xtal density not needed
@@ -428,11 +428,11 @@ begin
 	    return P * r(P) / (2.0 * β * σ_y)
 	end
 	
-	# mass of adsorbent
+	# mass of pressure vessel (tank)
 	# input:
 	#       P [=] bar
 	# output:
-	#       mₐ [=] kg
+	#       mₜ [=] kg
 	function mₜ(P::Float64)  # bulk Xe storage
 	    return 4.0 * π * r(P) ^ 2.0 * t(P) * ρ_t
 	end

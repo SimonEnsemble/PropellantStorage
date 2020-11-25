@@ -161,13 +161,12 @@ begin
 	        xtal_to_ρ[xtal_name] = 500.0 # kg/m³
 	    end
 	end
-	
 	xtal_to_ρ # kg/m³
 end
 
 # ╔═╡ b853e33e-0f35-11eb-2027-9d77b137546e
 md"
-##### fit Langmuir adsorption isotherm models to adsorption data in the materials
+##### Fit Langmuir adsorption isotherm models to adsorption data in the materials
 
 well, first, read them in!
 "
@@ -296,7 +295,7 @@ begin
 	const xtal_to_marker = Dict(zip(xtal_names, _markers[1:length(xtal_names)]))
 		
 	sborn = pyimport("seaborn")
-	colorz = sborn.color_palette("Set2", length(xtal_names))
+	colorz = sborn.color_palette("husl", length(xtal_names))
 	const xtal_to_color =  Dict(zip(xtal_names, colorz))
 end
 
@@ -708,6 +707,12 @@ begin
 	performance_plot()
 end
 
+# ╔═╡ 95054c18-2b93-11eb-0d17-3f8166d00547
+ads_opt["SBMOF-1"]["P [bar]"]
+
+# ╔═╡ af8c02fc-2b93-11eb-3e3e-8f4695ff5bbf
+ads_opt["SBMOF-1"]["tf"]
+
 # ╔═╡ ce3da226-18a3-11eb-25df-572b24f5d3f0
 close("all")
 
@@ -930,6 +935,51 @@ end
 # ╔═╡ aa7d343e-1973-11eb-094e-735edc33dd81
 silver_lining()
 
+# ╔═╡ bcbd7308-2b7e-11eb-0eca-89bb2fa4bac7
+md"### What density do MOFs need to compete with Bulk Xenon Storage?"
+
+# ╔═╡ f1b3ec22-2b7e-11eb-14c9-3d2d4a739e6b
+begin
+	actual_ρ = zeros(length(xtal_names))
+	needed_ρ = zeros(length(xtal_names))
+	for (i, xtal_name) in enumerate(xtal_names)
+		actual_ρ[i] = xtal_to_ρ[xtal_name]
+		needed_ρ[i] = (sqrt(bulk_opt["tf"] * xe_atomic_mass * xtal_to_M[xtal_name]) - sqrt(3 * ρ_t / (2 * σ_y * β * xtal_to_K[xtal_name])))^2
+	end
+	needed_ρ
+end
+
+# ╔═╡ ee317ff6-2b7e-11eb-28d5-19d6ae3e6791
+begin
+	ind = 1:length(xtal_names)
+	width = 0.45
+	colors = [xtal_to_color[xtal_name] for xtal_name in xtal_names]
+	
+	figure()
+	xlabel("adsorbents")
+	ylabel(L"density [kg/m$^3$]")
+	bar(ind, actual_ρ, width, color=colors, edgecolor=colors, hatch="")
+	bar(ind .+ width, needed_ρ, width, fill=false,
+			 edgecolor=colors, hatch="////",
+			 linewidth=1.0)
+	xticks(ind .+ width/2, 
+			[xtal_to_label[xtal_name] for xtal_name in xtal_names],
+			rotation="vertical",
+			fontsize=10)
+	x=8
+	y=1350
+	text(x, y, 
+		"* adsorbent density required to\n obtain the tankage fraction of\n bulk storage",
+		fontsize=8)
+	legend([L"\rho_{ads}", L"\rho_{ads^*}"])
+	tight_layout()
+	savefig("Idealized_MOF_Density.pdf", dpi=300, format="pdf")
+	gcf()
+end
+
+# ╔═╡ 88133366-2b80-11eb-3178-15dc1a3f14ef
+
+
 # ╔═╡ Cell order:
 # ╟─54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
 # ╠═6091fca2-0b62-11eb-0351-93554cbc8d52
@@ -983,6 +1033,8 @@ silver_lining()
 # ╠═e4ed9b6c-18bb-11eb-2796-8fe1689d5e35
 # ╠═c5a0c9e2-18a1-11eb-17a4-8572d491905e
 # ╠═1015e5fa-0dcd-11eb-3352-09bc6056a02f
+# ╠═95054c18-2b93-11eb-0d17-3f8166d00547
+# ╠═af8c02fc-2b93-11eb-3e3e-8f4695ff5bbf
 # ╠═ce3da226-18a3-11eb-25df-572b24f5d3f0
 # ╠═a8b0c9c4-0dcd-11eb-2924-91b2875da4ea
 # ╟─fb16b62c-0f32-11eb-05fd-e72d057be910
@@ -993,3 +1045,7 @@ silver_lining()
 # ╠═53ea8fba-189f-11eb-381f-293a22ca726a
 # ╠═47eef0be-1973-11eb-399a-a5657c838de7
 # ╠═aa7d343e-1973-11eb-094e-735edc33dd81
+# ╟─bcbd7308-2b7e-11eb-0eca-89bb2fa4bac7
+# ╠═f1b3ec22-2b7e-11eb-14c9-3d2d4a739e6b
+# ╠═ee317ff6-2b7e-11eb-28d5-19d6ae3e6791
+# ╠═88133366-2b80-11eb-3178-15dc1a3f14ef

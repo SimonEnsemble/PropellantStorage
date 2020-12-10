@@ -1,11 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.12.11
+# v0.12.16
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 6091fca2-0b62-11eb-0351-93554cbc8d52
-using PorousMaterials, PyPlot, DataFrames, CSV, Interpolations, Optim, Printf, PyCall
+using PorousMaterials, PyPlot, DataFrames, CSV, Interpolations, Optim, Printf, PyCall, Roots
 
 # ╔═╡ 54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
 md"
@@ -68,10 +68,10 @@ begin
 	# Universal Gas Constant:
 	const R = 8.3144598e-5; # m³-bar/(K-mol)
 	
-	const xe_atomic_mass = 131.293 / 1000    # kg Xe/ mol Xe (molar mass)
+	const xe_molar_mass = 131.293 / 1000    # kg Xe/ mol Xe 
 	# common amount of xenon gas required to bring into space [1].
 	const mass_desired_xe_propellant = 100.0 # kg Xe
-	const mol_desired_xe_propellant = mass_desired_xe_propellant / xe_atomic_mass # mol Xe
+	const mol_desired_xe_propellant = mass_desired_xe_propellant / xe_molar_mass # mol Xe
 end
 
 # ╔═╡ e4f7db60-0b65-11eb-1dda-37f708ccc230
@@ -161,7 +161,7 @@ begin
 	        xtal_to_ρ[xtal_name] = 500.0 # kg/m³
 	    end
 	end
-	xtal_to_ρ # kg/m³
+	xtal_to_ρ # kg/m³	
 end
 
 # ╔═╡ b853e33e-0f35-11eb-2027-9d77b137546e
@@ -197,7 +197,6 @@ begin
 	        deleterows!(xe_isotherms[xtal_name], 30:39)
 	    elseif xtal_name == "COF-103 (simulated)"
 	        xe_isotherms[xtal_name] = xe_isotherms[xtal_name][:, [Symbol("pressure (bar)"), Symbol("⟨N⟩ (mmol/g)")]]
-	    else 
 	    end
 	end
 	
@@ -211,7 +210,7 @@ md"convert units."
 begin
 	# Define what the desired common units are for the data
 	common_pressure_units = Symbol("Pressure (bar)")
-	common_loading_units = Symbol("Loading (mol/m³)")
+	common_loading_units = Symbol("Loading (mol/kg)")
 	
 	# Define a dictionary with conversion factors.
 	pressure_conversion = Dict{Symbol, Float64}()
@@ -236,7 +235,7 @@ begin
 	# [(% mass) / 100 g Xe / g MOF](1 mol / MW_Xe g) (1000 g /1 kg)
 	loading_conversion[:PercentMass] = 1000.0 / 131.1 / 100.0
 	# this one is an exception where xtal density not needed
-	loading_conversion[Symbol("L(mol/L)")] = 1000.0 # (mol / L)(1000 L / m3)
+	# loading_conversion[Symbol("L(mol/L)")] = 1000.0 # (mol / L)(1000 L / m3)
 end
 
 # ╔═╡ 0fdab85c-0f5c-11eb-2cec-69e1a95c6e45
@@ -248,11 +247,11 @@ for xtal_name in xtal_names
             xe_isotherms[xtal_name][!, common_pressure_units] = xe_isotherms[xtal_name][:, col_name] * pressure_conversion[col_name]
         # convert loading units to mol/m3
         elseif col_name in keys(loading_conversion)
-            if col_name == Symbol("L(mol/L)")
-                xe_isotherms[xtal_name][!, common_loading_units] = xe_isotherms[xtal_name][!, col_name] * loading_conversion[col_name]
-            else 
-                xe_isotherms[xtal_name][!, common_loading_units] = xe_isotherms[xtal_name][:, col_name] * loading_conversion[col_name] * xtal_to_ρ[xtal_name]
-            end 
+            # if col_name == Symbol("L(mol/L)")
+            #     xe_isotherms[xtal_name][!, common_loading_units] = xe_isotherms[xtal_name][!, col_name] * loading_conversion[col_name]
+            # else 
+			xe_isotherms[xtal_name][!, common_loading_units] = xe_isotherms[xtal_name][:, col_name] * loading_conversion[col_name]
+            # end 
 		end
     end
 	
@@ -285,6 +284,7 @@ begin
 	xtal_to_label = Dict(xtal_name => xtal_name for xtal_name in xtal_names)
 	xtal_to_label["NiPyC2"] = L"Ni(PyC)$_2$"
 	xtal_to_label["Activated-Carbon"] = "activated carbon"
+	xtal_to_label["Co-formate"] = L"Co$_3$(HCOO)$_6$"
 end
 
 # ╔═╡ feaf132e-0b63-11eb-28ff-7f327d815001
@@ -309,14 +309,19 @@ our $\rho_{Xe}^{ads}(P)$ [mol/m³]
 function ρ_xe_ads(P::Float64, xtal_name::String)
     M = xtal_to_M[xtal_name]
     K = xtal_to_K[xtal_name]
-    return M * K * P / (1 + K * P) # mol/m³
+	ρ = xtal_to_ρ[xtal_name]
+    return M * ρ * K * P / (1 + K * P) # mol/m³
 end
 
 # ╔═╡ e7a49568-1893-11eb-321c-69b330620a80
-function plot_langmuir_fits()    
+function plot_langmuir_fits(;gravimetric::Bool=false)    
 	figure(figsize=(8, 5))
 	xlabel(L"pressure, $P$ [bar]")
-    ylabel(L"adsorbed Xe density, $\rho_{Xe}$ [mol/m$^3$]")
+	if gravimetric
+    	ylabel(L"adsorbed Xe density, $\rho_{Xe}$ [mol/kg]")
+	else
+		ylabel(L"adsorbed Xe density, $\rho_{Xe}$ [mol/m$^3$]")
+	end
 
 	# Langmuir fits
     Ps = range(0.0, stop=1.2, length=500)
@@ -324,80 +329,48 @@ function plot_langmuir_fits()
 		if xtal_name == "COF-103 (simulated)"
 			continue
 		end
-		plot(Ps, ρ_xe_ads.(Ps, xtal_name), color=xtal_to_color[xtal_name])
+		
+		if gravimetric		
+			plot(Ps, ρ_xe_ads.(Ps, xtal_name) / xtal_to_ρ[xtal_name], color=xtal_to_color[xtal_name])
 
-		scatter(xe_isotherms[xtal_name][:, common_pressure_units], 
-				xe_isotherms[xtal_name][:, common_loading_units],
-				color=xtal_to_color[xtal_name],
-				edgecolor="k", zorder=400, label=xtal_to_label[xtal_name])
+			scatter(xe_isotherms[xtal_name][:, common_pressure_units], 
+					xe_isotherms[xtal_name][:, common_loading_units],
+					color=xtal_to_color[xtal_name],
+					edgecolor="k", zorder=400, label=xtal_to_label[xtal_name])
+		else	
+			plot(Ps, ρ_xe_ads.(Ps, xtal_name), color=xtal_to_color[xtal_name])
+
+			scatter(xe_isotherms[xtal_name][:, common_pressure_units], 
+					xe_isotherms[xtal_name][:, common_loading_units] * xtal_to_ρ[xtal_name],
+					color=xtal_to_color[xtal_name],
+					edgecolor="k", zorder=400, label=xtal_to_label[xtal_name])
+		end
 	end
-    # bulk gas density
-    plot(Ps, ρ_xe.(Ps), label="bulk gas", linestyle="--", color="gray", lw=1)
-
+	if ! gravimetric
+	    # bulk gas density
+   		plot(Ps, ρ_xe.(Ps), label="bulk gas", linestyle="--", color="gray", lw=1)
+	end
+	
     legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
-	ylim([0, 6000])
+	ylim(ymin=0.0)
 	xlim([0, 1.05])
     tight_layout()
-    
-    savefig("figz/langmuir_fits.pdf", format="pdf", bbox_inches="tight")
+    if gravimetric
+    	savefig("figz/langmuir_fits_gravimetric.pdf", format="pdf", bbox_inches="tight")
+	else
+		savefig("figz/langmuir_fits_volumetric.pdf", format="pdf", bbox_inches="tight")
+	end
 	gcf()
 end
 
 # ╔═╡ f5711acc-1893-11eb-1937-337d2b173321
 plot_langmuir_fits()
 
-# ╔═╡ 2d065e94-0f60-11eb-0b27-1f7172213feb
-function plot_langmuir_fit(xtal_name::String, ymax::Float64)
-    figure()
-    xlabel(L"pressure, $P$ [bar]")
-    ylabel(L"$\rho_{Xe}$ [mol/m$^3$]")
-    title(xtal_to_label[xtal_name])
-	
-	# langmuir params hack for legend
-	K_plot = plot([], [], " ", 
-		   label=L"$M=$" * @sprintf("%.1f ", xtal_to_M[xtal_name]) * L"mol/m$^3$")
-	M_plot = plot([], [], " ", label=L"$K=$" * @sprintf("%.1f bar", xtal_to_K[xtal_name]))
-
-	
-	# Langmuir fit
-    Ps = range(0.0, stop=1.2, length=500)
-    L_fit_plot = plot(Ps, ρ_xe_ads.(Ps, xtal_name), color=xtal_to_color[xtal_name], 
-		label="Langmuir fit")
-	
-	# exp'tl adsorption data
-    label="experiment"
-    if xtal_name == "COF-103 (simulated)"
-        label="simulation"
-    end
-    data_plot = scatter(xe_isotherms[xtal_name][:, common_pressure_units], 
-						xe_isotherms[xtal_name][:, common_loading_units],
-						color=xtal_to_color[xtal_name], label=label, 
-						edgecolor="k", zorder=400)
-    
-    # bulk gas density
-    bulk_ρ_plot = plot(Ps, ρ_xe.(Ps), label="bulk gas", linestyle="--", color="gray", lw=1)
-    
-	plot_series = [M_plot, K_plot, data_plot, L_fit_plot, bulk_ρ_plot]
-    # legend(plot_series, [plot_s.get_label() for plot_s in plot_series])
-	ylim(ymax=ymax)
-	xlim(xmax=1.2)
-    tight_layout()
-    
-    savefig("figz/langmuir_fit_" * xtal_name * ".pdf", format="pdf", bbox_inches="tight")
-	gcf()
-end
-
-# ╔═╡ c0fc3880-0f60-11eb-399d-257fc3e46549
-begin
-	ymax = maximum([ρ_xe_ads(1.2, xtal_name) for xtal_name in xtal_names])
-	# for xtal_name in xtal_names
-	# 	plot_langmuir_fit(xtal_name, ymax)
-	# end
-	plot_langmuir_fit(xtal_names[1], ymax)
-end
-
 # ╔═╡ 2d85d0dc-0b66-11eb-1a99-7fee2143ef57
 md"our $\rho_{Xe}(P)$ [mol/m³]"
+
+# ╔═╡ 83c86fb4-3a7c-11eb-281d-0b0fac556a7c
+plot_langmuir_fits(gravimetric=true)
 
 # ╔═╡ aa5c1ad4-0b67-11eb-37b5-9746aa76c7f8
 md"
@@ -600,7 +573,7 @@ begin
 	end
 	
 	function tankage_fraction_opt_analytical(xtal::String)
-		return 1 / (xtal_to_M[xtal]  * xe_atomic_mass) * (sqrt(xtal_to_ρ[xtal]) + sqrt(3 * ρ_t / (2 * σ_y * β * xtal_to_K[xtal]))) ^ 2
+		return 1 / (xtal_to_M[xtal] * xtal_to_ρ[xtal] * xe_molar_mass) * (sqrt(xtal_to_ρ[xtal]) + sqrt(3 * ρ_t / (2 * σ_y * β * xtal_to_K[xtal]))) ^ 2
 	end
 	
 	function test_analytical_eqns()
@@ -746,7 +719,9 @@ begin
 		
 		fig, axs = plt.subplots(4, 1, figsize=(5, 7), sharex=true)
 		xlabel("material")
-		xticks(ids, xtal_names[ids_sorted], rotation="vertical")
+		xticks(ids, 
+			   [xtal_to_label[xtal_name] for xtal_name in xtal_names[ids_sorted]], 
+			   rotation="vertical")
 		
 		# m_v
 		axs[1].set_ylabel(L"$m_v(P_{opt})$ [kg]")
@@ -839,8 +814,9 @@ end
 # ╔═╡ 11b18cca-0f33-11eb-2556-f946a9ac7d0b
 begin
 	figure()
-	xlabel(L"Langmuir $M$ [mol/m$^3$]")
+	xlabel(L"Langmuir $M$ [mol/kg]")
 	ylabel("optimal tankage fraction")
+	
 	for xtal in xtal_names
 	    scatter(xtal_to_M[xtal], ads_opt[xtal]["tf"],
 	   		    ; scatter_kwargs(xtal)...)
@@ -873,7 +849,7 @@ function materials_space_viz()
 		for k = 1:3
 			x_projected = copy(x)
 			if k == 2
-				x_projected[k] = 15000
+				x_projected[k] = 40
 			else
 				x_projected[k] = 0
 			end
@@ -887,11 +863,11 @@ function materials_space_viz()
 	end
 
 	xlabel(L"Langmuir $K$ [bar$^{-1}$]", labelpad=10, fontsize=12)
-	ylabel(L"Langmuir $M$ [mol/m$^3$]", labelpad=10, fontsize=12)
+	ylabel(L"Langmuir $M$ [mol/kg]", labelpad=10, fontsize=12)
 	zlabel(L"density, ρ$_{ads}$ [kg/m³]", labelpad=10, fontsize=12)
 
 	tick_params(labelsize=10)
-	ylim(0.0, 15000)
+	ylim(ymin=0.0, ymax=40)
 	xlim(left=0.0)
 	zlim(bottom=0.0)
 	legend(bbox_to_anchor=(1.05, 1), borderaxespad=5)
@@ -936,48 +912,177 @@ end
 silver_lining()
 
 # ╔═╡ bcbd7308-2b7e-11eb-0eca-89bb2fa4bac7
-md"### What density do MOFs need to compete with Bulk Xenon Storage?"
+md"### What density do MOFs need in order to compete with Bulk Xenon Storage?"
+
+# ╔═╡ 101610d0-3a86-11eb-092a-fbf136d10626
+md" The analysis shows that there is no solution, i.e. this inquery is flawed."
 
 # ╔═╡ f1b3ec22-2b7e-11eb-14c9-3d2d4a739e6b
 begin
 	actual_ρ = zeros(length(xtal_names))
 	needed_ρ = zeros(length(xtal_names))
-	for (i, xtal_name) in enumerate(xtal_names)
+	
+	for (i, xtal_name) in enumerate(xtal_names)	
+# 		# # function to be evaluated
+# 		f(ρ_ads) = bulk_opt["tf"] - (1 / (M_over_ρ * ρ_ads * xe_molar_mass)) * 
+# 				(sqrt(ρ_ads) + sqrt(3 * ρ_t / (2 * σ_y * β * xtal_to_K[xtal_name])))^2
+		
 		actual_ρ[i] = xtal_to_ρ[xtal_name]
-		needed_ρ[i] = (sqrt(bulk_opt["tf"] * xe_atomic_mass * xtal_to_M[xtal_name]) - sqrt(3 * ρ_t / (2 * σ_y * β * xtal_to_K[xtal_name])))^2
+# 		needed_ρ[i] = fzero(f, actual_ρ[i])		
+		
+		needed_ρ[i] = 3 * xtal_to_ρ[xtal_name] / 
+		( 2 * σ_y * β * xtal_to_K[xtal_name] * 
+		(1 - sqrt(bulk_opt["tf"] * xtal_to_M[xtal_name] * xe_molar_mass))^2)
+		
+		@assert ((1 - sqrt(bulk_opt["tf"] * xtal_to_M[xtal_name] * xe_molar_mass)) < 0)
 	end
 	needed_ρ
 end
 
+# ╔═╡ 29e07436-3a51-11eb-23ce-a317836fa3c7
+# begin
+# 	ind = 1:length(xtal_names)
+# 	width = 0.3
+# 	colors = [xtal_to_color[xtal_name] for xtal_name in xtal_names]
+	
+# 	figure()
+# 	xlabel("adsorbents")
+# 	ylabel(L"density [kg/m$^3$]")
+	
+# 	bar(ind .+ width, actual_ρ, width, color=colors, edgecolor=colors, hatch="")
+	
+# 	# bar(ind .+ 2*width, qd_ρ_pos, width, fill=false,
+# 	# 		 edgecolor=colors, hatch="////",
+# 	# 		 linewidth=1.0)
+	
+# 	bar(ind .+ 2*width, qd_ρ_neg, width, fill=false,
+# 			edgecolor=colors, hatch="////",
+# 			linewidth=1.0)
+	
+	
+# 	xticks(ind .+ 2*width, 
+# 			[xtal_to_label[xtal_name] for xtal_name in xtal_names],
+# 			rotation="vertical",
+# 			fontsize=10)
+	
+# 	yscale("log")
+# 	# ylim(1, 10^20)
+	
+# 	# x=6.5
+# 	# y=0.55*10^17
+# 	# text(x, y, 
+# 	# 	"* adsorbent density required to\n obtain the tankage fraction of\n bulk storage",
+# 	# 	fontsize=8)
+	
+# 	legend(loc="upper right", 
+# 		   [L"\rho_{ads}", L"\rho_{ads^*_{positive}}", L"\rho_{ads^*_{negative}}"])
+	
+# 	tight_layout()
+# 	savefig("Idealized_MOF_Density_QuadraticSolution.png", dpi=300, format="png")
+# 	gcf()
+# end
+
 # ╔═╡ ee317ff6-2b7e-11eb-28d5-19d6ae3e6791
+# begin
+# 	ind = 1:length(xtal_names)
+# 	width = 0.45
+# 	colors = [xtal_to_color[xtal_name] for xtal_name in xtal_names]
+	
+# 	figure()
+# 	xlabel("adsorbents")
+# 	ylabel(L"density [kg/m$^3$]")
+	
+# 	bar(ind, actual_ρ, width, color=colors, edgecolor=colors, hatch="")
+# 	bar(ind .+ width, needed_ρ, width, fill=false,
+# 			 edgecolor=colors, hatch="////",
+# 			 linewidth=1.0)
+	
+	
+# 	xticks(ind .+ width/2, 
+# 			[xtal_to_label[xtal_name] for xtal_name in xtal_names],
+# 			rotation="vertical",
+# 			fontsize=10)
+	
+# 	yscale("log")
+# 	ylim(1, 10^20)
+	
+# 	x=6.5
+# 	y=0.55*10^17
+# 	text(x, y, 
+# 		"* adsorbent density required to\n obtain the tankage fraction of\n bulk storage",
+# 		fontsize=8)
+	
+# 	legend(loc="upper right", [L"\rho_{ads}", L"\rho_{ads^*}"])
+	
+# 	tight_layout()
+# 	# savefig("Idealized_MOF_Density.pdf", dpi=300, format="pdf")
+# 	gcf()
+# end
+
+# ╔═╡ 992aaf76-2f77-11eb-0d5f-3f19e5205ab6
+md"### Compare crystal density to powder/pellet density"
+
+# ╔═╡ c8a8abb4-35ac-11eb-3552-2fa75cb611f9
 begin
-	ind = 1:length(xtal_names)
-	width = 0.45
-	colors = [xtal_to_color[xtal_name] for xtal_name in xtal_names]
+	# experimentally measure MOF densities provided by  Chong, Saehwa
+	# sample	density(g/cm3)	std dev(g/cm3)
+	# N:PyC		1.7409			0.1344
+	# N:DbDC	1.9884			0.0048
+	# CaSDB		1.8314			0.0716
+	# CC3		1.0788			0.0071
+	# SBMoF-2	1.3433			0.0061
+	powder_ρ = Dict{String, Float64}()
+	powder_ρ["CC3"]       = 1.0788 # g/cm³
+	powder_ρ["NiPyC2"]    = 1.7409 # g/cm³
+	powder_ρ["Ni-MOF-74"] = 1.9884 # g/cm³
+	powder_ρ["SBMOF-1"]   = 1.8314 # g/cm³
+	powder_ρ["SBMOF-2"]   = 1.3433 # g/cm³
+	
+	powder_std_dev = Dict{String, Float64}()
+	powder_std_dev["CC3"]       = 0.0071 # g/cm³
+	powder_std_dev["NiPyC2"]    = 0.1344 # g/cm³
+	powder_std_dev["Ni-MOF-74"] = 0.0048 # g/cm³
+	powder_std_dev["SBMOF-1"]   = 0.0716 # g/cm³
+	powder_std_dev["SBMOF-2"]   = 0.0061 # g/cm³
+	# convert: g/cm³ = 1000kg/m³
+	for key in keys(powder_ρ)
+		powder_ρ[key]        *= 1000
+		powder_std_dev[key] *= 1000
+	end
+end
+
+# ╔═╡ fd5c8c0e-35ac-11eb-040c-1301adb58152
+begin
+	indx = 1:length(keys(powder_ρ))
+	ww = 0.25 # width
+	cc = [xtal_to_color[xtal_name] for xtal_name in keys(powder_ρ)]
 	
 	figure()
 	xlabel("adsorbents")
 	ylabel(L"density [kg/m$^3$]")
-	bar(ind, actual_ρ, width, color=colors, edgecolor=colors, hatch="")
-	bar(ind .+ width, needed_ρ, width, fill=false,
-			 edgecolor=colors, hatch="////",
-			 linewidth=1.0)
-	xticks(ind .+ width/2, 
-			[xtal_to_label[xtal_name] for xtal_name in xtal_names],
-			rotation="vertical",
-			fontsize=10)
-	x=8
-	y=1350
-	text(x, y, 
-		"* adsorbent density required to\n obtain the tankage fraction of\n bulk storage",
-		fontsize=8)
-	legend([L"\rho_{ads}", L"\rho_{ads^*}"])
+	bar(indx, [xtal_to_ρ[nm] for nm in keys(powder_ρ)], ww, 
+		color=cc, edgecolor=cc, hatch="")
+	bar(indx .+ ww, [powder_ρ[nm] for nm in keys(powder_ρ)], 
+		yerr=[powder_std_dev[nm] for nm in keys(powder_ρ)], ww, 
+		fill=false, edgecolor=cc, hatch="////", linewidth=1.0)
+	xticks(indx .+ ww/2, 
+		[xtal_to_label[nm] for nm in keys(powder_ρ)],  
+		rotation="vertical", fontsize=10)
+
+	legend(loc="best", [L"\rho_{ads}" * " crystal", L"\rho_{ads}" * " powder"])
+	
 	tight_layout()
-	savefig("Idealized_MOF_Density.pdf", dpi=300, format="pdf")
+	savefig("MOF_crystal_vs_powder_density.pdf", dpi=300, format="pdf")
 	gcf()
 end
 
-# ╔═╡ 88133366-2b80-11eb-3178-15dc1a3f14ef
+# ╔═╡ 32913bc4-35d3-11eb-0923-950b040de4f0
+md"### Redo previous analysis using new densities"
+
+# ╔═╡ e2d6e3c0-35d4-11eb-36f0-838a6a525a54
+
+
+# ╔═╡ 1a3341fa-3a7f-11eb-2459-c7391bf1f2f9
 
 
 # ╔═╡ Cell order:
@@ -1014,9 +1119,8 @@ end
 # ╠═ef807360-0b64-11eb-0f1b-cdd324b8b1bb
 # ╠═e7a49568-1893-11eb-321c-69b330620a80
 # ╠═f5711acc-1893-11eb-1937-337d2b173321
-# ╠═2d065e94-0f60-11eb-0b27-1f7172213feb
-# ╠═c0fc3880-0f60-11eb-399d-257fc3e46549
 # ╟─2d85d0dc-0b66-11eb-1a99-7fee2143ef57
+# ╠═83c86fb4-3a7c-11eb-281d-0b0fac556a7c
 # ╟─aa5c1ad4-0b67-11eb-37b5-9746aa76c7f8
 # ╠═218243b0-0dc8-11eb-01ed-258156f8aa9d
 # ╠═9c3c5810-0b67-11eb-0141-8bfa134546a6
@@ -1046,6 +1150,13 @@ end
 # ╠═47eef0be-1973-11eb-399a-a5657c838de7
 # ╠═aa7d343e-1973-11eb-094e-735edc33dd81
 # ╟─bcbd7308-2b7e-11eb-0eca-89bb2fa4bac7
+# ╟─101610d0-3a86-11eb-092a-fbf136d10626
 # ╠═f1b3ec22-2b7e-11eb-14c9-3d2d4a739e6b
+# ╠═29e07436-3a51-11eb-23ce-a317836fa3c7
 # ╠═ee317ff6-2b7e-11eb-28d5-19d6ae3e6791
-# ╠═88133366-2b80-11eb-3178-15dc1a3f14ef
+# ╟─992aaf76-2f77-11eb-0d5f-3f19e5205ab6
+# ╠═c8a8abb4-35ac-11eb-3552-2fa75cb611f9
+# ╠═fd5c8c0e-35ac-11eb-040c-1301adb58152
+# ╟─32913bc4-35d3-11eb-0923-950b040de4f0
+# ╠═e2d6e3c0-35d4-11eb-36f0-838a6a525a54
+# ╠═1a3341fa-3a7f-11eb-2459-c7391bf1f2f9

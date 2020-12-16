@@ -288,6 +288,7 @@ begin
 	xtal_to_label["NiPyC2"] = L"Ni(PyC)$_2$"
 	xtal_to_label["Activated-Carbon"] = "activated carbon"
 	xtal_to_label["Co-formate"] = L"Co$_3$(HCOO)$_6$"
+	xtal_to_label
 end
 
 # ╔═╡ feaf132e-0b63-11eb-28ff-7f327d815001
@@ -632,6 +633,9 @@ begin
 	    ads_opt[xtal]["m_t [kg]"] = mₜ(opt.minimizer, xtal)
 	    ads_opt[xtal]["m_a [kg]"] = mₐ(opt.minimizer, xtal)
 	    ads_opt[xtal]["m [kg]"] = mₐ(opt.minimizer, xtal) + mₜ(opt.minimizer, xtal)
+		
+		@assert ads_opt[xtal]["tf"] ≈ tankage_fraction_opt_analytical(xtal)
+		@assert isapprox(ads_opt[xtal]["P [bar]"], P_opt_analytical(xtal), atol=0.001)
 	end
 end
 
@@ -639,52 +643,6 @@ end
 md"
 summarize
 "
-
-# ╔═╡ e4ed9b6c-18bb-11eb-2796-8fe1689d5e35
-begin
-	function viz_mt()
-		ids = 1:length(xtal_names)
-		colors = [xtal_to_color[xtal] for xtal in xtal_names]
-		
-		fig, axs = plt.subplots(4, 1, figsize=(5, 7), sharex=true)
-		xlabel("material")
-		xticks(ids, 
-			   [xtal_to_label[xtal_name] for xtal_name in xtal_names], 
-			   rotation="vertical")
-		
-		# m_v
-		axs[1].set_ylabel(L"$m_v(P_{opt})$ [kg]")
-		m_ts = [ads_opt[xtal]["m_t [kg]"] for xtal in xtal_names]
-		axs[1].bar(ids, m_ts, color=colors)
-		m_t_b = mₜ(bulk_opt["P (bar)"])
-		axs[1].axhline(y=m_t_b, linestyle="--", color="gray")
-		
-		# m_a
-		axs[2].set_ylabel(L"$m_{ads}(P_{opt})$ [kg]")
-		m_as = [ads_opt[xtal]["m_a [kg]"] for xtal in xtal_names]
-		axs[2].bar(ids, m_as, color=colors)
-		
-		# r
-		axs[3].set_ylabel(L"$r(P_{opt})$ [m]")
-		rs = [ads_opt[xtal]["r [m]"] for xtal in xtal_names]
-		axs[3].bar(ids, rs, color=colors)
-		r_b = r(bulk_opt["P (bar)"])
-		axs[3].axhline(y=r_b, linestyle="--", color="gray")
-		
-		# t
-		axs[4].set_ylabel(L"$t(P_{opt})$ [mm]")
-		ts = [ads_opt[xtal]["t [m]"] for xtal in xtal_names] * 1000
-		axs[4].bar(ids, ts, color=colors)
-		t_b = t(bulk_opt["P (bar)"]) * 1000
-		axs[4].axhline(y=t_b, linestyle="--", color="gray")
-		
-		tight_layout()
-		savefig("figz/ads_summary.pdf", bbox_inches="tight")
-		gcf()
-	end
-	
-	viz_mt()
-end
 
 # ╔═╡ c5a0c9e2-18a1-11eb-17a4-8572d491905e
 md"should this be volume at same pressure?
@@ -740,24 +698,70 @@ close("all")
 
 # ╔═╡ a8b0c9c4-0dcd-11eb-2924-91b2875da4ea
 begin
-	ids = 1:length(ads_opt)
-	ids_sorted = sortperm([ads_opt[xtal]["tf"] for xtal in keys(ads_opt)])                      
+	ids = 1:length(xtal_names)
+	ids_sorted = sortperm([ads_opt[xtal]["tf"] for xtal in xtal_names])                      
 	figure()
 	xlabel("material")
 	ylabel("mass [kg]")
 	
-	m_xtal = [ads_opt[xtal]["m_a [kg]"] for xtal in keys(ads_opt)]
-	m_tank_walls = [ads_opt[xtal]["m_t [kg]"] for xtal in keys(ads_opt)]
+	m_xtal = [ads_opt[xtal]["m_a [kg]"] for xtal in xtal_names]
+	m_tank_walls = [ads_opt[xtal]["m_t [kg]"] for xtal in xtal_names]
 	
 	bar(ids, m_xtal[ids_sorted], label=L"adsorbent, $m_{ads}$")
 	bar(ids, m_tank_walls[ids_sorted], bottom=m_xtal[ids_sorted],
 		label=L"vessel walls, $m_v$", color="C1")
 	
 	legend()
-	xticks(ids, [xtal_to_label[xtal] for xtal in collect(keys(ads_opt))[ids_sorted]], rotation="vertical")
+	xticks(ids, [xtal_to_label[xtal] for xtal in xtal_names[ids_sorted]], rotation="vertical")
 	tight_layout()
 	savefig("figz/m_t_m_a.pdf", bbox_inches="tight")
 	gcf()
+end
+
+# ╔═╡ e4ed9b6c-18bb-11eb-2796-8fe1689d5e35
+begin
+	function viz_mt()
+		ids = 1:length(xtal_names)
+		colors = [xtal_to_color[xtal] for xtal in xtal_names][ids_sorted]
+		
+		fig, axs = plt.subplots(4, 1, figsize=(5, 7), sharex=true)
+		xlabel("material")
+		xticks(ids, 
+			   [xtal_to_label[xtal_name] for xtal_name in xtal_names][ids_sorted], 
+			   rotation="vertical")
+		
+		# m_v
+		axs[1].set_ylabel(L"$m_v(P_{opt})$ [kg]")
+		m_ts = [ads_opt[xtal]["m_t [kg]"] for xtal in xtal_names][ids_sorted]
+		axs[1].bar(ids, m_ts, color=colors)
+		m_t_b = mₜ(bulk_opt["P (bar)"])
+		axs[1].axhline(y=m_t_b, linestyle="--", color="gray")
+		
+		# m_a
+		axs[2].set_ylabel(L"$m_{ads}(P_{opt})$ [kg]")
+		m_as = [ads_opt[xtal]["m_a [kg]"] for xtal in xtal_names][ids_sorted]
+		axs[2].bar(ids, m_as, color=colors)
+		
+		# r
+		axs[3].set_ylabel(L"$r(P_{opt})$ [m]")
+		rs = [ads_opt[xtal]["r [m]"] for xtal in xtal_names][ids_sorted]
+		axs[3].bar(ids, rs, color=colors)
+		r_b = r(bulk_opt["P (bar)"])
+		axs[3].axhline(y=r_b, linestyle="--", color="gray")
+		
+		# t
+		axs[4].set_ylabel(L"$t(P_{opt})$ [mm]")
+		ts = [ads_opt[xtal]["t [m]"] for xtal in xtal_names][ids_sorted] * 1000
+		axs[4].bar(ids, ts, color=colors)
+		t_b = t(bulk_opt["P (bar)"]) * 1000
+		axs[4].axhline(y=t_b, linestyle="--", color="gray")
+		
+		tight_layout()
+		savefig("figz/ads_summary.pdf", bbox_inches="tight")
+		gcf()
+	end
+	
+	viz_mt()
 end
 
 # ╔═╡ fb16b62c-0f32-11eb-05fd-e72d057be910
@@ -770,7 +774,6 @@ how does tankage fraction relate to materials properties?
 
 # ╔═╡ 37cf428e-0dce-11eb-154b-25742d645575
 begin
-	
 	figure(figsize=figsize)
 	xlabel(L"density of material, $\rho_{ads}$ [kg/m$^3$]")
 	ylabel("optimal tankage fraction")
@@ -797,7 +800,7 @@ end
 
 # ╔═╡ 105f4f12-0f33-11eb-161c-a1d26651a48c
 begin
-	figure()
+	figure(figsize=figsize)
 	xlabel(L"Langmuir $K$ [1/bar]")
 	ylabel("optimal tankage fraction")
 	for xtal in xtal_names
@@ -816,7 +819,7 @@ end
 
 # ╔═╡ 11b18cca-0f33-11eb-2556-f946a9ac7d0b
 begin
-	figure()
+	figure(figsize=figsize)
 	xlabel(L"Langmuir $M$ [mol/kg]")
 	ylabel("optimal tankage fraction")
 	
@@ -918,7 +921,7 @@ silver_lining()
 md"### Compare crystal and bulk densities
 
 compare xtal density with reported tap/bulk density for materials for which we have it.
-source: https://pubs.acs.org/doi/full/10.1021/acsami.0c11200
+source: https://pubs.acs.org/doi/full/10.1021/acsami.0c11200 pg. S-13 of SI has table.
 "
 
 # ╔═╡ c8a8abb4-35ac-11eb-3552-2fa75cb611f9
@@ -929,8 +932,8 @@ xtal_to_bulk_ρ = Dict("CC3"       => 0.139 * 1000,
 # ╔═╡ fd5c8c0e-35ac-11eb-040c-1301adb58152
 begin
 	function compare_bulk_xtal_ρ()
-		bulk_ρ_xtal_names = ["CC3", "HKUST-1", "Ni-MOF-74"]
 		w = 0.35 # width
+		bulk_ρ_xtal_names = keys(xtal_to_bulk_ρ)
 		ids = 1:length(bulk_ρ_xtal_names)
 		
 		ρ_xtal = [xtal_to_ρ[xtal_name] for xtal_name in bulk_ρ_xtal_names]
@@ -939,19 +942,23 @@ begin
 		
 		figure(figsize=(4.4, 4.8))
 		xlabel("adsorbents")
-		ylabel(L"density [kg/m$^3$]")
+		ylabel(L"adsorbent density, $\rho_{ads}$ [kg/m$^3$]")
 		
 		bar(ids, ρ_xtal, 
-			w, color=colors, edgecolor=colors, hatch="", 
-			label=L"$\rho_{ads}$ [crystal]")
+			w, color=colors, edgecolor=colors, hatch="")
 		bar(ids .+ w, ρ_bulk, 
-			w, fill=false, edgecolor=colors, hatch="////", linewidth=1.0,
-			label=L"$\rho_{ads}$ [bulk]")
+			w, fill=false, edgecolor=colors, hatch="////", linewidth=1.0)
 		xticks(ids .+ w/2, 
 			[xtal_to_label[xtal_name] for xtal_name in bulk_ρ_xtal_names],  
 			rotation="vertical", fontsize=10)
-
+		
+		
+		# dummy plot for legend
+		xlims = gca().get_xlim() # store x-lims to put back later
+		bar([-2], [0], w, color="k", edgecolor="k", hatch="", label="crystal")
+		bar([-2], [0], w, fill=false, edgecolor="k", hatch="////", linewidth=1.0, label="bulk")
 		legend()
+		xlim(xlims)
 
 		tight_layout()
 		savefig("figz/xtal_vs_bulk_density.pdf", format="pdf")
@@ -962,10 +969,64 @@ begin
 end
 
 # ╔═╡ 32913bc4-35d3-11eb-0923-950b040de4f0
-md"### Redo previous analysis using new densities"
+md"### Redo previous analysis using new densities
+"
 
 # ╔═╡ ed2754f6-3f46-11eb-0039-2b0419e7f318
+begin
+	for xtal_name in keys(xtal_to_bulk_ρ)
+		xtal_name_bulk = xtal_name * "_bulk"
+		
+		xtal_to_M[xtal_name_bulk] = xtal_to_M[xtal_name]
+		xtal_to_K[xtal_name_bulk] = xtal_to_K[xtal_name]
+		xtal_to_ρ[xtal_name_bulk] = xtal_to_bulk_ρ[xtal_name]
+		
+		opt = optimum_storage(xtal_name_bulk)
+			
+		ads_opt[xtal_name_bulk] = Dict()
+		ads_opt[xtal_name_bulk]["P [bar]"] = opt.minimizer
+		ads_opt[xtal_name_bulk]["tf"] = opt.minimum / mass_desired_xe_propellant
+		
+		@assert ads_opt[xtal_name_bulk]["tf"] ≈ tankage_fraction_opt_analytical(xtal_name_bulk)
+		@assert isapprox(ads_opt[xtal_name_bulk]["P [bar]"], P_opt_analytical(xtal_name_bulk), atol=0.001)
+	end
+end
 
+# ╔═╡ 1fdb33fe-3f56-11eb-1864-c142c3315bfd
+function bulk_vs_xtal_ρ_on_tf()
+	figure(figsize=figsize)
+	xlabel(L"density of material, $\rho_{ads}$ [kg/m$^3$]")
+	ylabel("optimal tankage fraction")
+	texts = []
+	for xtal_name in keys(xtal_to_bulk_ρ)
+		xtal_name_bulk = xtal_name * "_bulk"
+		
+		ρ_xtal = xtal_to_ρ[xtal_name]
+		ρ_bulk = xtal_to_ρ[xtal_name_bulk]
+		
+		tf_opt_xtal = ads_opt[xtal_name]["tf"]
+		tf_opt_bulk = ads_opt[xtal_name_bulk]["tf"]
+		scatter(ρ_xtal, tf_opt_xtal; scatter_kwargs(xtal_name)..., zorder=10)
+		scatter(ρ_bulk, tf_opt_bulk; scatter_kwargs(xtal_name)..., color="k", edgecolor="k")
+		plot([ρ_xtal, ρ_bulk], [tf_opt_xtal, tf_opt_bulk], linestyle="--", color="0.1")
+		push!(texts,
+			  annotate(xtal_to_label[xtal_name], (ρ_xtal, tf_opt_xtal), fontsize=10)
+		)
+	end
+	
+	axhline(y=[bulk_opt["tf"]], linestyle="--", color="gray", label="bulk storage")
+	adjustText.adjust_text(texts, force_points=(4.0, 2.0))
+	
+	ylim(ymin=0.0)
+	xlim(xmin=0.0)
+	tight_layout()
+	# legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
+	savefig("figz/tf_vs_crystal_and_bulk_density.pdf", format="pdf", bbox_inches="tight")
+	gcf()
+end
+
+# ╔═╡ 5a9aff8e-3f57-11eb-127a-e934dbed5245
+bulk_vs_xtal_ρ_on_tf()
 
 # ╔═╡ Cell order:
 # ╟─54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
@@ -1036,3 +1097,5 @@ md"### Redo previous analysis using new densities"
 # ╠═fd5c8c0e-35ac-11eb-040c-1301adb58152
 # ╟─32913bc4-35d3-11eb-0923-950b040de4f0
 # ╠═ed2754f6-3f46-11eb-0039-2b0419e7f318
+# ╠═1fdb33fe-3f56-11eb-1864-c142c3315bfd
+# ╠═5a9aff8e-3f57-11eb-127a-e934dbed5245

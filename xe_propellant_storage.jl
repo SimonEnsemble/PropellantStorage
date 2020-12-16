@@ -840,44 +840,84 @@ end
 
 # ╔═╡ e9c0dacc-189e-11eb-0a0b-49ea73af6ef7
 function materials_space_viz()
-	fig = plt.figure()
-	ax = fig.add_subplot(111, projection="3d")
-	title("material space")
+# 	fig = plt.figure()
+# 	ax = fig.add_subplot(111, projection="3d")
+# 	title("material space")
 
-	for xtal_name in xtal_names
-		x = [xtal_to_K[xtal_name], xtal_to_M[xtal_name], xtal_to_ρ[xtal_name]]
+# 	for xtal_name in xtal_names
+# 		x = [xtal_to_K[xtal_name], xtal_to_M[xtal_name], xtal_to_ρ[xtal_name]]
 		
-		scatter3D(x...,
-			label=xtal_to_label[xtal_name], 
-			marker=xtal_to_marker[xtal_name], 
-			s=75, color=xtal_to_color[xtal_name])
+# 		scatter3D(x...,
+# 			label=xtal_to_label[xtal_name], 
+# 			marker=xtal_to_marker[xtal_name], 
+# 			s=75, color=xtal_to_color[xtal_name])
 		
-		for k = 1:3
-			x_projected = copy(x)
-			if k == 2
-				x_projected[k] = 40
-			else
-				x_projected[k] = 0
+# 		for k = 1:3
+# 			x_projected = copy(x)
+# 			if k == 2
+# 				x_projected[k] = 40
+# 			else
+# 				x_projected[k] = 0
+# 			end
+# 			plot(
+# 				[x_projected[1], x[1]], 
+# 				[x_projected[2], x[2]], 
+# 				[x_projected[3], x[3]], 
+# 				color=xtal_to_color[xtal_name], alpha=0.7
+# 				)
+# 		end
+# 	end
+
+# 	xlabel(L"Langmuir $K$ [bar$^{-1}$]", labelpad=10, fontsize=12)
+# 	ylabel(L"Langmuir $M$ [mol/kg]", labelpad=10, fontsize=12)
+# 	zlabel(L"density, ρ$_{ads}$ [kg/m³]", labelpad=10, fontsize=12)
+
+# 	tick_params(labelsize=10)
+# 	ylim(ymin=0.0, ymax=40)
+# 	xlim(left=0.0)
+# 	zlim(bottom=0.0)
+# 	legend(bbox_to_anchor=(1.05, 1), borderaxespad=5)
+# 	# ax.view_init(elev=20.0, azim=45)
+# 	tight_layout()
+# 	savefig("figz/material_space.pdf", bbox_inches="tight")
+# 	gcf()
+	
+	x = zeros(3, length(xtal_names))
+	props = [L"$M$ [mol/kg]", L"$K$ [bar$^{-1}$]", L"$\rho_{ads}$ [kg/m³]"]
+	for (c, xtal_name) in enumerate(xtal_names)
+		x[1, c] = xtal_to_M[xtal_name]
+		x[2, c] = xtal_to_K[xtal_name]
+		x[3, c] = xtal_to_ρ[xtal_name]
+	end
+	
+	fig, axs = subplots(3, 3, figsize=(8, 8))
+	for i = 1:3
+		for j = 1:3
+			if i < j
+				axs[i, j].axis("off")
+				continue
 			end
-			plot(
-				[x_projected[1], x[1]], 
-				[x_projected[2], x[2]], 
-				[x_projected[3], x[3]], 
-				color=xtal_to_color[xtal_name], alpha=0.7
-				)
+			if i == j
+				axs[i, j].hist(x[i, :], color="k")
+				axs[i, j].set_ylabel("# adsorbents")
+				axs[i, j].set_xlabel(props[i])
+				axs[i, j].set_xlim(xmin=0)
+			else
+				for c = 1:length(xtal_names)
+					axs[i, j].scatter(x[i, c], x[j, c];
+						scatter_kwargs(xtal_names[c])...)
+				end
+				axs[i, j].set_xlabel(props[i])
+				axs[i, j].set_ylabel(props[j])
+				axs[i, j].set_xlim(xmin=0)
+				axs[i, j].set_ylim(ymin=0)
+				if i == 3
+					handles, labels = axs[i, j].get_legend_handles_labels()
+					fig.legend(handles, labels)
+				end
+			end
 		end
 	end
-
-	xlabel(L"Langmuir $K$ [bar$^{-1}$]", labelpad=10, fontsize=12)
-	ylabel(L"Langmuir $M$ [mol/kg]", labelpad=10, fontsize=12)
-	zlabel(L"density, ρ$_{ads}$ [kg/m³]", labelpad=10, fontsize=12)
-
-	tick_params(labelsize=10)
-	ylim(ymin=0.0, ymax=40)
-	xlim(left=0.0)
-	zlim(bottom=0.0)
-	legend(bbox_to_anchor=(1.05, 1), borderaxespad=5)
-	# ax.view_init(elev=20.0, azim=45)
 	tight_layout()
 	savefig("figz/material_space.pdf", bbox_inches="tight")
 	gcf()

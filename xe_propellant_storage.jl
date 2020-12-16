@@ -340,14 +340,16 @@ function plot_langmuir_fits(;gravimetric::Bool=false)
 			scatter(xe_isotherms[xtal_name][:, common_pressure_units], 
 					xe_isotherms[xtal_name][:, common_loading_units],
 					color=xtal_to_color[xtal_name],
-					edgecolor="k", zorder=400, label=xtal_to_label[xtal_name])
+					edgecolor="k", zorder=400, label=xtal_to_label[xtal_name],
+			        marker=xtal_to_marker[xtal_name])
 		else	
 			plot(Ps, ρ_xe_ads.(Ps, xtal_name), color=xtal_to_color[xtal_name])
 
 			scatter(xe_isotherms[xtal_name][:, common_pressure_units], 
 					xe_isotherms[xtal_name][:, common_loading_units] * xtal_to_ρ[xtal_name],
 					color=xtal_to_color[xtal_name],
-					edgecolor="k", zorder=400, label=xtal_to_label[xtal_name])
+					edgecolor="k", zorder=400, label=xtal_to_label[xtal_name],
+			        marker=xtal_to_marker[xtal_name])
 		end
 	end
 	if ! gravimetric

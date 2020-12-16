@@ -319,7 +319,7 @@ end
 
 # ╔═╡ e7a49568-1893-11eb-321c-69b330620a80
 function plot_langmuir_fits(;gravimetric::Bool=false)    
-	figure(figsize=(8, 5))
+	figure(figsize=figsize .+ (2, 0))
 	xlabel(L"pressure, $P$ [bar]")
 	if gravimetric
     	ylabel(L"adsorbed Xe density, $\rho_{Xe}$ [mol/kg]")

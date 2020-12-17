@@ -322,9 +322,9 @@ function plot_langmuir_fits(;gravimetric::Bool=false)
 	figure(figsize=figsize .+ (2, 0))
 	xlabel(L"pressure, $P$ [bar]")
 	if gravimetric
-    	ylabel(L"adsorbed Xe density, $\rho_{Xe}$ [mol/kg]")
+    	ylabel(L"adsorbed Xe density, $\rho_{Xe}^{ads}(P)$ [mol/kg]")
 	else
-		ylabel(L"adsorbed Xe density, $\rho_{Xe}$ [mol/m$^3$]")
+		ylabel(L"adsorbed Xe density, $\rho_{Xe}^{ads}(P)$ [mol/m$^3$]")
 	end
 
 	# Langmuir fits
@@ -646,12 +646,6 @@ md"
 summarize
 "
 
-# ╔═╡ c5a0c9e2-18a1-11eb-17a4-8572d491905e
-md"should this be volume at same pressure?
-or volume at optimal pressure?
-both seem a valuable comparison.
-"
-
 # ╔═╡ 1015e5fa-0dcd-11eb-3352-09bc6056a02f
 begin
 	function performance_plot()
@@ -726,37 +720,54 @@ begin
 		ids = 1:length(xtal_names)
 		colors = [xtal_to_color[xtal] for xtal in xtal_names][ids_sorted]
 		
-		fig, axs = plt.subplots(4, 1, figsize=(5, 7), sharex=true)
-		xlabel("material")
-		xticks(ids, 
-			   [xtal_to_label[xtal_name] for xtal_name in xtal_names][ids_sorted], 
-			   rotation="vertical")
+		fig, axs = plt.subplots(1, 5, figsize=(7, 3.5), sharey=true)
+		
+		axs[1].set_ylabel("adsorbent")
+		axs[1].set_yticks(ids)
+		axs[1].set_yticklabels(
+			[xtal_to_label[xtal_name] for xtal_name in xtal_names][ids_sorted], 
+			   rotation="horizontal")
+		xlabel("optimized adsorbed xenon storage system")
 		
 		# m_v
-		axs[1].set_ylabel(L"$m_v(P_{opt})$ [kg]")
+		axs[1].set_xlabel(L"$m_v(P_{opt})$" * "\n" *  "[kg]")
 		m_ts = [ads_opt[xtal]["m_t [kg]"] for xtal in xtal_names][ids_sorted]
-		axs[1].bar(ids, m_ts, color=colors)
+		axs[1].barh(ids, m_ts, color=colors)
 		m_t_b = mₜ(bulk_opt["P (bar)"])
-		axs[1].axhline(y=m_t_b, linestyle="--", color="gray")
+		axs[1].axvline(x=m_t_b, linestyle="--", color="gray")
 		
 		# m_a
-		axs[2].set_ylabel(L"$m_{ads}(P_{opt})$ [kg]")
+		axs[2].set_xlabel(L"$m_{ads}(P_{opt})$" * "\n" *  "[kg]")
 		m_as = [ads_opt[xtal]["m_a [kg]"] for xtal in xtal_names][ids_sorted]
-		axs[2].bar(ids, m_as, color=colors)
+		axs[2].barh(ids, m_as, color=colors)
 		
 		# r
-		axs[3].set_ylabel(L"$r(P_{opt})$ [m]")
+		axs[3].set_xlabel(L"$r(P_{opt})$" * "\n" *  "[m]")
 		rs = [ads_opt[xtal]["r [m]"] for xtal in xtal_names][ids_sorted]
-		axs[3].bar(ids, rs, color=colors)
+		axs[3].barh(ids, rs, color=colors)
 		r_b = r(bulk_opt["P (bar)"])
-		axs[3].axhline(y=r_b, linestyle="--", color="gray")
+		axs[3].axvline(x=r_b, linestyle="--", color="gray")
 		
 		# t
-		axs[4].set_ylabel(L"$t(P_{opt})$ [mm]")
+		axs[4].set_xlabel(L"$t(P_{opt})$" * "\n" *  "[mm]")
 		ts = [ads_opt[xtal]["t [m]"] for xtal in xtal_names][ids_sorted] * 1000
-		axs[4].bar(ids, ts, color=colors)
+		axs[4].barh(ids, ts, color=colors)
 		t_b = t(bulk_opt["P (bar)"]) * 1000
-		axs[4].axhline(y=t_b, linestyle="--", color="gray")
+		axs[4].axvline(x=t_b, linestyle="--", color="gray")
+		
+		# ρ_xe
+		axs[5].set_xlabel(L"$\rho_{Xe}^{ads}(P_{opt})$" * "\n" * L"[mol/m$^3$]")
+		ρ = [ρ_xe_ads(ads_opt[xtal]["P [bar]"], xtal) for xtal in xtal_names][ids_sorted]
+		axs[5].barh(ids, ρ, color=colors)
+		axs[5].axvline(x=ρ_xe(bulk_opt["P (bar)"]), linestyle="--", color="gray")
+		
+		# despine
+		for i = 1:5
+			for s in ["top", "right"]
+				axs[i].spines[s].set_visible(false)
+			end
+			axs[i].tick_params(axis="y", length=0.0)
+		end
 		
 		tight_layout()
 		savefig("figz/ads_summary.pdf", bbox_inches="tight")
@@ -835,7 +846,7 @@ begin
 	ylim(ymin=0.0)
 	xlim(xmin=0.0)
 	legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
-	savefig("figures/tf_vs_M.pdf",                    
+	savefig("figz/tf_vs_M.pdf",                    
 		    bbox_inches="tight")
 	gcf()
 end
@@ -1120,7 +1131,6 @@ bulk_vs_xtal_ρ_on_tf()
 # ╠═018c2b64-0da7-11eb-100a-4d1ee4e512f3
 # ╟─d182f874-18bb-11eb-28b8-ad20c019015e
 # ╠═e4ed9b6c-18bb-11eb-2796-8fe1689d5e35
-# ╠═c5a0c9e2-18a1-11eb-17a4-8572d491905e
 # ╠═1015e5fa-0dcd-11eb-3352-09bc6056a02f
 # ╠═95054c18-2b93-11eb-0d17-3f8166d00547
 # ╠═af8c02fc-2b93-11eb-3e3e-8f4695ff5bbf

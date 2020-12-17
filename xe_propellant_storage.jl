@@ -103,33 +103,6 @@ numerical implementation of $\rho_{Xe}(P)$
 # example use: 
 #   ρ_xe(59.0)
 
-# ╔═╡ 5bbe5418-0b66-11eb-1d57-798a7b5b78de
-begin
-	function viz_bulk_ρ()
-		P_range_bulk = range(0.0, 350.0, length=350) # bar
-		# ideal gas density
-		ρ_ideal_gas = P_range_bulk / (R * temperature) # mol / m³
-		
-		figure(figsize=figsize)
-		plot(P_range_bulk, ρ_xe.(P_range_bulk), color="C0", 
-			label="xenon (NIST data)", lw=3, zorder=4)
-		vlines(Pc, 0.0, ρ_xe(Pc), linestyle="-.", 
-			color="gray", lw=2, label="critical pressure")
-		plot(P_range_bulk, ρ_ideal_gas, color="C2", label="ideal gas", 
-			lw=3, linestyle="--")
-		xlabel(L"pressure, $P$ [bar]")
-		ylabel(L"density of bulk xenon, $\rho_{Xe}$ [mol/m$^3$]")
-		ylim([0.0, 17500*1.025])
-		xlim([0.0, 351])
-		legend()
-		tight_layout()
-		savefig("figz/xenon_gas_density.pdf", bbox_inches="tight")
-		gcf()
-	end
-	
-	viz_bulk_ρ()
-end
-
 # ╔═╡ 29239f5e-0b63-11eb-1b90-67892ca5c215
 md"## materials data"
 
@@ -322,7 +295,7 @@ function plot_langmuir_fits(;gravimetric::Bool=false)
 	figure(figsize=figsize .+ (2, 0))
 	xlabel(L"pressure, $P$ [bar]")
 	if gravimetric
-    	ylabel(L"adsorbed Xe density, $\rho_{Xe}^{ads}(P)$ [mol/kg]")
+    	ylabel(L"adsorbed Xe, $\rho_{Xe}^{ads}(P) / \rho_{ads}$ [mol/kg]")
 	else
 		ylabel(L"adsorbed Xe density, $\rho_{Xe}^{ads}(P)$ [mol/m$^3$]")
 	end
@@ -354,7 +327,7 @@ function plot_langmuir_fits(;gravimetric::Bool=false)
 	end
 	if ! gravimetric
 	    # bulk gas density
-   		plot(Ps, ρ_xe.(Ps), label="bulk gas", linestyle="--", color="gray", lw=1)
+   		plot(Ps, ρ_xe.(Ps), label="bulk gas", linestyle="--", color="gray", lw=2)
 	end
 	
     legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
@@ -505,6 +478,38 @@ begin
 	bulk_opt
 end
 
+# ╔═╡ 5bbe5418-0b66-11eb-1d57-798a7b5b78de
+begin
+	function viz_bulk_ρ(;plot_bulk_opt::Bool=false)
+		P_range_bulk = range(0.0, 350.0, length=350) # bar
+		# ideal gas density
+		ρ_ideal_gas = P_range_bulk / (R * temperature) # mol / m³
+		
+		figure(figsize=figsize)
+		plot(P_range_bulk, ρ_xe.(P_range_bulk), color="C1", 
+			label="xenon (NIST data)", lw=3, zorder=4)
+		vlines(Pc, 0.0, ρ_xe(Pc), linestyle="-.", 
+			color="gray", lw=2, label="critical pressure")
+		plot(P_range_bulk, ρ_ideal_gas, color="C2", label="ideal gas", 
+			lw=3, linestyle="--")
+		if plot_bulk_opt
+			scatter([bulk_opt["P (bar)"]], [ρ_xe(bulk_opt["P (bar)"])], 
+			    marker="x", color="black", zorder=500, s=50,
+				label=L"$(P_{opt}, \rho_{Xe}(P_{opt}))$")
+		end
+		xlabel(L"pressure, $P$ [bar]")
+		ylabel(L"density of bulk xenon, $\rho_{Xe}$ [mol/m$^3$]")
+		ylim([0.0, 17500*1.025])
+		xlim([0.0, 351])
+		legend()
+		tight_layout()
+		savefig("figz/xenon_gas_density.pdf", bbox_inches="tight")
+		gcf()
+	end
+	
+	viz_bulk_ρ(plot_bulk_opt=true)
+end
+
 # ╔═╡ 33ed9f0e-0dc8-11eb-1b06-89178c499937
 begin
 	function viz_bulk_storage()
@@ -640,6 +645,48 @@ begin
 		@assert isapprox(ads_opt[xtal]["P [bar]"], P_opt_analytical(xtal), atol=0.001)
 	end
 end
+
+# ╔═╡ e9d44782-4009-11eb-1340-0779d661f08c
+function compare_xe_densities()    
+	figure(figsize=figsize .+ (2, 0))
+	xlabel(L"pressure, $P$ [bar]")
+	ylabel(L"adsorbed Xe density, $\rho_{Xe}^{ads}(P)$ [mol/m$^3$]")
+
+	# Langmuir fits
+    Ps = 10.0 .^ range(-3, stop=2.0, length=700)
+	for xtal_name in xtal_names	
+		if xtal_name == "COF-103 (simulated)"
+			continue
+		end
+		plot(Ps, ρ_xe_ads.(Ps, xtal_name), 
+			 color=xtal_to_color[xtal_name])# , label=xtal_to_label[xtal_name])
+		_P_opt = ads_opt[xtal_name]["P [bar]"]
+		scatter([_P_opt], [ρ_xe_ads(_P_opt, xtal_name)], 
+			marker="x", color=xtal_to_color[xtal_name], zorder=500, s=50)
+		scatter(xe_isotherms[xtal_name][:, common_pressure_units], 
+					xe_isotherms[xtal_name][:, common_loading_units] * xtal_to_ρ[xtal_name],
+					color=xtal_to_color[xtal_name],
+					edgecolor="k", zorder=400, label=xtal_to_label[xtal_name],
+			        marker=xtal_to_marker[xtal_name])
+	
+	end
+	# bulk gas density
+	plot(Ps, ρ_xe.(Ps), label="bulk gas", linestyle="--", color="gray", lw=2)
+	scatter([bulk_opt["P (bar)"]], [ρ_xe(bulk_opt["P (bar)"])], 
+			marker="x", color="k", zorder=500, s=50,
+			label=L"$(P_{opt}, \rho_{Xe}(P_{opt}))$")
+	
+    legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
+	ylim(ymin=0.0)
+	xlim([0.01, 100])
+	xscale("log")
+    tight_layout()
+	savefig("figz/rho_xe_ads.pdf", format="pdf", bbox_inches="tight")
+	gcf()
+end
+
+# ╔═╡ 3e6b82ec-400a-11eb-0623-352dcc769736
+compare_xe_densities()
 
 # ╔═╡ d182f874-18bb-11eb-28b8-ad20c019015e
 md"
@@ -1117,6 +1164,8 @@ bulk_vs_xtal_ρ_on_tf()
 # ╠═f5711acc-1893-11eb-1937-337d2b173321
 # ╟─2d85d0dc-0b66-11eb-1a99-7fee2143ef57
 # ╠═83c86fb4-3a7c-11eb-281d-0b0fac556a7c
+# ╠═e9d44782-4009-11eb-1340-0779d661f08c
+# ╠═3e6b82ec-400a-11eb-0623-352dcc769736
 # ╟─aa5c1ad4-0b67-11eb-37b5-9746aa76c7f8
 # ╠═218243b0-0dc8-11eb-01ed-258156f8aa9d
 # ╠═9c3c5810-0b67-11eb-0141-8bfa134546a6

@@ -572,6 +572,15 @@ begin
 	viz_bulk_storage()
 end
 
+# ╔═╡ 33a2bb2e-4013-11eb-1e18-b5941607ec71
+xtal = "Ni-MOF-74"
+
+# ╔═╡ 2b09c99e-4013-11eb-191b-d9dd3640e728
+sqrt(xtal_to_ρ[xtal])
+
+# ╔═╡ 30fc5d80-4013-11eb-383a-ed5d70957249
+sqrt(3 * ρ_t / (2 * σ_y * β * xtal_to_K[xtal]))
+
 # ╔═╡ 11185356-0b67-11eb-1bb3-e15f94234be3
 md"
 test analytical solutions from paper
@@ -887,11 +896,14 @@ begin
 	    scatter(xtal_to_M[xtal], ads_opt[xtal]["tf"],
 	   		    ; scatter_kwargs(xtal)...)
 	end
+	Ms = range(0, 50, length=300)
+	plot(Ms, 1 ./ Ms ./ xe_molar_mass, color="k", zorder=0, label=L"$1/(Mw_{Xe})$")
 	
-	axhline(y=[bulk_opt["tf"]], linestyle="--", color="black", label="bulk storage")
+	axhline(y=[bulk_opt["tf"]], linestyle="--", color="gray", label="bulk storage")
 	
-	ylim(ymin=0.0)
-	xlim(xmin=0.0)
+	ylim([0, 8])
+	xlim([0, 50])
+	# xlim([0, 15])
 	legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
 	savefig("figz/tf_vs_M.pdf",                    
 		    bbox_inches="tight")
@@ -1173,6 +1185,9 @@ bulk_vs_xtal_ρ_on_tf()
 # ╠═33ed9f0e-0dc8-11eb-1b06-89178c499937
 # ╟─d90fc4f0-0b66-11eb-33da-372fc8695a3c
 # ╠═e1dbf234-0b66-11eb-244a-33506ae7db4a
+# ╠═33a2bb2e-4013-11eb-1e18-b5941607ec71
+# ╠═2b09c99e-4013-11eb-191b-d9dd3640e728
+# ╠═30fc5d80-4013-11eb-383a-ed5d70957249
 # ╟─11185356-0b67-11eb-1bb3-e15f94234be3
 # ╠═1721c25a-0b67-11eb-1b47-9bad136bd63a
 # ╟─f4cb6ea8-0da6-11eb-120e-8d67d8ca58b7

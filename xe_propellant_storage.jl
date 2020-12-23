@@ -872,16 +872,22 @@ begin
 	figure(figsize=figsize)
 	xlabel(L"Langmuir $K$ [1/bar]")
 	ylabel("optimal tankage fraction")
-	for xtal in xtal_names
-	    scatter(xtal_to_K[xtal], ads_opt[xtal]["tf"],
-	   		    ; scatter_kwargs(xtal)...)
+	textsss = []
+	for xtal_name in xtal_names
+		K = xtal_to_K[xtal_name]
+		tf_opt = ads_opt[xtal_name]["tf"]
+	    scatter(K, tf_opt; scatter_kwargs(xtal_name)...)
+		push!(textsss,
+		annotate(xtal_to_label[xtal_name], (K, tf_opt), fontsize=10)
+		)
 	end
+	adjustText.adjust_text(textsss)#, force_points=(4.0, 4.0), force_text=(0.05, 0.05))
 	
 	axhline(y=[bulk_opt["tf"]], linestyle="--", color="black", label="bulk storage")
 	
 	ylim(ymin=0.0)
 	xlim(xmin=0.0)
-	legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
+	# legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
 	savefig("figz/tf_vs_K.pdf", format="pdf", bbox_inches="tight")
 	gcf()
 end
@@ -1133,22 +1139,22 @@ end
 # ╔═╡ 1fdb33fe-3f56-11eb-1864-c142c3315bfd
 function bulk_vs_xtal_ρ_on_tf()
 	figure(figsize=figsize)
-	xlabel(L"density of material, $\rho_{ads}$ [kg/m$^3$]")
+	xlabel(L"optimal storage pressure, $P_{opt}$ [bar]")
 	ylabel("optimal tankage fraction")
 	texts = []
 	for xtal_name in keys(xtal_to_bulk_ρ)
 		xtal_name_bulk = xtal_name * "_bulk"
 		
-		ρ_xtal = xtal_to_ρ[xtal_name]
-		ρ_bulk = xtal_to_ρ[xtal_name_bulk]
+		P_opt_xtal = ads_opt[xtal_name]["P [bar]"]
+		P_opt_bulk = ads_opt[xtal_name_bulk]["P [bar]"]
 		
 		tf_opt_xtal = ads_opt[xtal_name]["tf"]
 		tf_opt_bulk = ads_opt[xtal_name_bulk]["tf"]
-		scatter(ρ_xtal, tf_opt_xtal; scatter_kwargs(xtal_name)..., zorder=10)
-		scatter(ρ_bulk, tf_opt_bulk; scatter_kwargs(xtal_name)..., color="k", edgecolor="k")
-		plot([ρ_xtal, ρ_bulk], [tf_opt_xtal, tf_opt_bulk], linestyle="--", color="0.1")
+		scatter(P_opt_xtal, tf_opt_xtal; scatter_kwargs(xtal_name)..., zorder=10)
+		scatter(P_opt_bulk, tf_opt_bulk; scatter_kwargs(xtal_name)..., color="k", edgecolor="k")
+		plot([P_opt_xtal, P_opt_bulk], [tf_opt_xtal, tf_opt_bulk], linestyle="--", color="0.1")
 		push!(texts,
-			  annotate(xtal_to_label[xtal_name], (ρ_xtal, tf_opt_xtal), fontsize=10)
+			  annotate(xtal_to_label[xtal_name], (P_opt_xtal, tf_opt_xtal), fontsize=10)
 		)
 	end
 	

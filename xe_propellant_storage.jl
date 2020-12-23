@@ -863,7 +863,7 @@ begin
 	xlim(xmin=0.0)
 	tight_layout()
 	# legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
-	savefig("figz/tf_vs_crystal_density.pdf", format="pdf", bbox_inches="tight")
+	savefig("figz/tf_vs_crystal_density.pdf", format="pdf")# , bbox_inches="tight")
 	gcf()
 end
 
@@ -887,8 +887,9 @@ begin
 	
 	ylim(ymin=0.0)
 	xlim(xmin=0.0)
+		tight_layout()
 	# legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
-	savefig("figz/tf_vs_K.pdf", format="pdf", bbox_inches="tight")
+	savefig("figz/tf_vs_K.pdf", format="pdf")# , bbox_inches="tight")
 	gcf()
 end
 
@@ -915,10 +916,11 @@ begin
 	
 	ylim([0, 6])
 	xlim([0, 15])
+	tight_layout()
 	# xlim([0, 15])
 	# legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
-	savefig("figz/tf_vs_M.pdf",                    
-		    bbox_inches="tight")
+	savefig("figz/tf_vs_M.pdf")#,                    
+		    # bbox_inches="tight")
 	gcf()
 end
 

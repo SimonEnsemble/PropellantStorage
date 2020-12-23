@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 6091fca2-0b62-11eb-0351-93554cbc8d52
-using PorousMaterials, PyPlot, DataFrames, CSV, Interpolations, Optim, Printf, PyCall, Roots
+using PorousMaterials, PyPlot, DataFrames, CSV, Interpolations, Optim, Printf, PyCall, Roots, Statistics
 
 # ╔═╡ 54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
 md"
@@ -108,8 +108,8 @@ md"## materials data"
 
 # ╔═╡ 7cc89760-0b64-11eb-2360-c97a464d908f
 const xtal_names = ["SBMOF-1", "CC3", "Ni-MOF-74", "HKUST-1", "SBMOF-2", 
-	                "Co-formate", "MOF-505", "Activated-Carbon", "NiPyC2", 
-	                "COF-103 (simulated)"]
+	                "Co-formate", "MOF-505", "Activated-Carbon", "NiPyC2"]#, 
+	       #         "COF-103 (simulated)"]
 
 # ╔═╡ b5cef332-0f59-11eb-22c4-cf85220a7af5
 md"##### get xtal densities"
@@ -892,23 +892,49 @@ begin
 	xlabel(L"Langmuir $M$ [mol/kg]")
 	ylabel("optimal tankage fraction")
 	
-	for xtal in xtal_names
-	    scatter(xtal_to_M[xtal], ads_opt[xtal]["tf"],
-	   		    ; scatter_kwargs(xtal)...)
+	textss = []
+	for xtal_name in xtal_names
+		M = xtal_to_M[xtal_name]
+		tf_opt = ads_opt[xtal_name]["tf"]
+	    scatter(M, tf_opt; scatter_kwargs(xtal_name)...)
+		push!(textss,
+		annotate(xtal_to_label[xtal_name], (M, tf_opt), fontsize=10)
+		)
 	end
+	adjustText.adjust_text(textss, force_points=(4.0, 4.0), force_text=(0.05, 0.05))
 	Ms = range(0, 50, length=300)
 	plot(Ms, 1 ./ Ms ./ xe_molar_mass, color="k", zorder=0, label=L"$1/(Mw_{Xe})$")
 	
 	axhline(y=[bulk_opt["tf"]], linestyle="--", color="gray", label="bulk storage")
 	
-	ylim([0, 8])
-	xlim([0, 50])
+	ylim([0, 6])
+	xlim([0, 15])
 	# xlim([0, 15])
-	legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
+	# legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
 	savefig("figz/tf_vs_M.pdf",                    
 		    bbox_inches="tight")
 	gcf()
 end
+
+# ╔═╡ 288d5448-44ae-11eb-14e1-cf4b0a173471
+md"look at $(KP_{opt})^{-1}$"
+
+# ╔═╡ a520f264-4493-11eb-1641-7f774bc5362a
+# 1/ (KP_opt)
+[1 / (ads_opt[xtal_name]["P [bar]"] * xtal_to_K[xtal_name]) for xtal_name in xtal_names]
+
+# ╔═╡ 27e164ee-44ae-11eb-3bc9-bd1a898f0c7d
+md"look at correlation between $M$ and tankage fraction"
+
+# ╔═╡ 4316fa12-44ae-11eb-3b3d-2b58bf5d7d6c
+cor([ads_opt[xtal_name]["tf"] for xtal_name in xtal_names], 
+	 [xtal_to_M[xtal_name] for xtal_name in xtal_names])
+
+# ╔═╡ 6b9bf7e6-44b1-11eb-22ab-01e16d851636
+md"what would $M$ have to be under this approximation to achieve bulk storage system tf?"
+
+# ╔═╡ 78f7ebd4-44b1-11eb-0c52-2bc65b04abab
+M_needed = 1 / (bulk_opt["tf"] * xe_molar_mass)
 
 # ╔═╡ e9c0dacc-189e-11eb-0a0b-49ea73af6ef7
 function materials_space_viz()
@@ -1204,6 +1230,12 @@ bulk_vs_xtal_ρ_on_tf()
 # ╠═37cf428e-0dce-11eb-154b-25742d645575
 # ╠═105f4f12-0f33-11eb-161c-a1d26651a48c
 # ╠═11b18cca-0f33-11eb-2556-f946a9ac7d0b
+# ╟─288d5448-44ae-11eb-14e1-cf4b0a173471
+# ╠═a520f264-4493-11eb-1641-7f774bc5362a
+# ╟─27e164ee-44ae-11eb-3bc9-bd1a898f0c7d
+# ╠═4316fa12-44ae-11eb-3b3d-2b58bf5d7d6c
+# ╟─6b9bf7e6-44b1-11eb-22ab-01e16d851636
+# ╠═78f7ebd4-44b1-11eb-0c52-2bc65b04abab
 # ╠═e9c0dacc-189e-11eb-0a0b-49ea73af6ef7
 # ╠═53ea8fba-189f-11eb-381f-293a22ca726a
 # ╠═47eef0be-1973-11eb-399a-a5657c838de7

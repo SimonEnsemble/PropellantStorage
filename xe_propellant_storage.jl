@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.17
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -487,7 +487,7 @@ begin
 		
 		figure(figsize=figsize)
 		plot(P_range_bulk, ρ_xe.(P_range_bulk), color="C1", 
-			label="xenon (NIST data)", lw=3, zorder=4)
+			label="xenon", lw=3, zorder=4)
 		vlines(Pc, 0.0, ρ_xe(Pc), linestyle="-.", 
 			color="gray", lw=2, label="critical pressure")
 		plot(P_range_bulk, ρ_ideal_gas, color="C2", label="ideal gas", 

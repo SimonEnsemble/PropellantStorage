@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.18
+# v0.12.16
 
 using Markdown
 using InteractiveUtils
@@ -1152,16 +1152,18 @@ function bulk_vs_xtal_ρ_on_tf()
 		
 		tf_opt_xtal = ads_opt[xtal_name]["tf"]
 		tf_opt_bulk = ads_opt[xtal_name_bulk]["tf"]
-		scatter(P_opt_xtal, tf_opt_xtal; scatter_kwargs(xtal_name)..., zorder=10)
-		scatter(P_opt_bulk, tf_opt_bulk; scatter_kwargs(xtal_name)..., color="k", edgecolor="k")
+		scatter(P_opt_xtal, tf_opt_xtal; scatter_kwargs(xtal_name)..., zorder=10, lw=2, s=150)
+		scatter(P_opt_bulk, tf_opt_bulk; scatter_kwargs(xtal_name)..., facecolor="None", lw=2, s=150)
 		plot([P_opt_xtal, P_opt_bulk], [tf_opt_xtal, tf_opt_bulk], linestyle="--", color="0.1")
+		x_text = (P_opt_xtal + P_opt_bulk) / 2
+		y_text = 0.05 .+ (tf_opt_xtal + tf_opt_bulk) / 2
 		push!(texts,
-			  annotate(xtal_to_label[xtal_name], (P_opt_xtal, tf_opt_xtal), fontsize=10)
+			  annotate(xtal_to_label[xtal_name], (x_text, y_text), ha="center", fontsize=10)
 		)
 	end
 	
 	axhline(y=[bulk_opt["tf"]], linestyle="--", color="gray", label="bulk storage")
-	adjustText.adjust_text(texts, force_points=(4.0, 2.0))
+	# adjustText.adjust_text(texts, force_points=(4.0, 2.0))
 	
 	ylim(ymin=0.0)
 	xlim(xmin=0.0)

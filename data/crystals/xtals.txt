@@ -1,0 +1,11 @@
+CC3.cssr
+Co-formate.cssr
+FMOF-Cu.cssr
+HKUST-1.cssr
+IRMOF-1.cssr
+MOF-505.cssr
+Ni-MOF-74.cssr
+PCN-14.cssr
+SBMOF-1.cssr
+SBMOF-2.cssr
+ZincTetrazolate.cssr

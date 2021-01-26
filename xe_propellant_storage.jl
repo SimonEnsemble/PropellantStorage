@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.16
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -168,9 +168,9 @@ begin
 		xe_isotherms[xtal_name] = CSV.read(isotherm_filename, DataFrame; copycols=true)
 	    # remove hysteresis branch manually
 	    if xtal_name == "FMOF-Cu" 
-	        deleterows!(xe_isotherms[xtal_name], 15:24)
+	        delete!(xe_isotherms[xtal_name], 15:24)
 	    elseif xtal_name == "SBMOF-2"
-	        deleterows!(xe_isotherms[xtal_name], 30:39)
+	        delete!(xe_isotherms[xtal_name], 30:39)
 	    elseif xtal_name == "COF-103 (simulated)"
 	        xe_isotherms[xtal_name] = xe_isotherms[xtal_name][:, [Symbol("pressure (bar)"), Symbol("⟨N⟩ (mmol/g)")]]
 	    end
@@ -1176,6 +1176,39 @@ end
 # ╔═╡ 5a9aff8e-3f57-11eb-127a-e934dbed5245
 bulk_vs_xtal_ρ_on_tf()
 
+# ╔═╡ c20cffb0-5f84-11eb-2ccb-13bf2d86c3f2
+###
+#  tankage fraction vs surface area
+###
+
+# ╔═╡ d62e5cc6-5f84-11eb-0eae-7b76f75cc824
+begin
+	# taken from iRASPA with Xe as the probe molecule (uses UFF?)
+	# 	evaluates energy surface at E=?
+	# volumettric surface area m²/cm³
+	volumetric_sa  = Dict(
+		"SBMOF-1"    => 475.56439,
+		"CC3"        => 635.30960,
+		"Ni-MOF-74"  => 1543.71072,
+		"HKUST-1"    => 2050.68317,
+		"SBMOF-2"    => 733.69677,
+		"Co-formate" => 671.68882,
+		"MOF-505"    => 2226.68069,
+		"Activated-Carbon" => 0.0,
+		"NiPyC2"     => 1004.96685)
+	# gravimetric surface area m²/g
+	gravimetric_sa = Dict(
+		"SBMOF-1"    => 302.83000,
+		"CC3"        => 662.75789,
+		"Ni-MOF-74"  => 1292.75976,
+		"HKUST-1"    => 2332.71884,
+		"SBMOF-2"    => 615.55891,
+		"Co-formate" => 368.75506,
+		"MOF-505"    => 2403.01824,
+		"Activated-Carbon" => 0.0,
+		"NiPyC2"     => 803.76080)
+end
+
 # ╔═╡ Cell order:
 # ╟─54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
 # ╠═6091fca2-0b62-11eb-0351-93554cbc8d52
@@ -1257,3 +1290,5 @@ bulk_vs_xtal_ρ_on_tf()
 # ╠═ed2754f6-3f46-11eb-0039-2b0419e7f318
 # ╠═1fdb33fe-3f56-11eb-1864-c142c3315bfd
 # ╠═5a9aff8e-3f57-11eb-127a-e934dbed5245
+# ╠═c20cffb0-5f84-11eb-2ccb-13bf2d86c3f2
+# ╠═d62e5cc6-5f84-11eb-0eae-7b76f75cc824

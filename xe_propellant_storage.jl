@@ -4,8 +4,14 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 28116d98-60cd-11eb-34a1-ad898092f194
+using Pkg; Pkg.activate("Project.toml"); Pkg.instantiate()
+
 # ╔═╡ 6091fca2-0b62-11eb-0351-93554cbc8d52
-using PorousMaterials, PyPlot, DataFrames, CSV, Interpolations, Optim, Printf, PyCall, Roots, Statistics
+using PyPlot, DataFrames, CSV, Interpolations, Optim, Printf, PyCall, Roots, Statistics, Xtals
+
+# ╔═╡ bcebf7a6-60ca-11eb-197a-954c5e410602
+include("IsothermFitting.jl")
 
 # ╔═╡ 54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
 md"
@@ -1242,7 +1248,9 @@ sa_vs_tf()
 
 # ╔═╡ Cell order:
 # ╟─54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
+# ╠═28116d98-60cd-11eb-34a1-ad898092f194
 # ╠═6091fca2-0b62-11eb-0351-93554cbc8d52
+# ╠═bcebf7a6-60ca-11eb-197a-954c5e410602
 # ╠═1cffb8d4-18a3-11eb-087f-83393730c57b
 # ╠═68ff0da6-0b66-11eb-1911-bf3faa3ceb7a
 # ╠═422c02b2-1802-11eb-31a7-c3671345f577

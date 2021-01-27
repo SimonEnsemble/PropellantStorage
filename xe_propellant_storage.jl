@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.18
+# v0.12.19
 
 using Markdown
 using InteractiveUtils
@@ -185,31 +185,31 @@ md"convert units."
 # ╔═╡ 40efd702-0f5b-11eb-2970-c1ee6ac4eedf
 begin
 	# Define what the desired common units are for the data
-	common_pressure_units = Symbol("Pressure (bar)")
-	common_loading_units = Symbol("Loading (mol/kg)")
+	common_pressure_units = "Pressure (bar)"
+	common_loading_units = "Loading (mol/kg)"
 	
 	# Define a dictionary with conversion factors.
-	pressure_conversion = Dict{Symbol, Float64}()
-	loading_conversion = Dict{Symbol, Float64}()
+	pressure_conversion = Dict{String, Float64}()
+	loading_conversion = Dict{String, Float64}()
 	
 	# pressure conversions to bar
-	pressure_conversion[Symbol("pressure (bar)")] = 1.0 # (1 bar) / (1 bar)
-	pressure_conversion[Symbol("P(bar)")]  = 1.0 # (1 bar) / (1 bar)
+	pressure_conversion["pressure (bar)"] = 1.0 # (1 bar) / (1 bar)
+	pressure_conversion["P(bar)"]  = 1.0 # (1 bar) / (1 bar)
 	# pressure_conversion[Symbol("fugacity (bar)")] = 1.0 # (1 bar) / (1 bar)
-	pressure_conversion[Symbol("P(mbar)")] = 1 / 1000 # (1 bar) / (1000 mbar)
-	pressure_conversion[Symbol("P(kPa)")]  = 1 / 100 # (1 bar) / (100 kPa)
-	pressure_conversion[Symbol("P(torr)")] = 1 / 750.062 # (1 bar) / (750.062 torr)
-	pressure_conversion[Symbol("P(atm)")]  = 1 / 0.986923 # (1 bar) / (0.986923 atm)
-	pressure_conversion[Symbol("P(mmHg)")] = 1 / 750.062 # (1 bar) / (750.026 mmHg)
+	pressure_conversion["P(mbar)"] = 1 / 1000 # (1 bar) / (1000 mbar)
+	pressure_conversion["P(kPa)"]  = 1 / 100 # (1 bar) / (100 kPa)
+	pressure_conversion["P(torr)"] = 1 / 750.062 # (1 bar) / (750.062 torr)
+	pressure_conversion["P(atm)"]  = 1 / 0.986923 # (1 bar) / (0.986923 atm)
+	pressure_conversion["P(mmHg)"] = 1 / 750.062 # (1 bar) / (750.026 mmHg)
 	
 	# loading conversions to mol/kg
 	# these conversion factors will put the quantity into mmol/g
-	loading_conversion[Symbol("L(mmol/g)")]    = 1.0 # (1 mol/kg) / (1 mmol/g)
-	loading_conversion[Symbol("⟨N⟩ (mmol/g)")] = 1.0 # (1 mol/kg) / (1 mmol/g)
-	loading_conversion[Symbol("L(ccSTP/g)")]   = 1 / 22.4 # (cc STP /g) (1000 g /kg) (1 mol/ 22.4 L STP) (1 L / 1000 cc)
-	loading_conversion[Symbol("L(cm3STP/g)")]  = 1 / 22.4
+	loading_conversion["L(mmol/g)"]    = 1.0 # (1 mol/kg) / (1 mmol/g)
+	loading_conversion["⟨N⟩ (mmol/g)"] = 1.0 # (1 mol/kg) / (1 mmol/g)
+	loading_conversion["L(ccSTP/g)"]   = 1 / 22.4 # (cc STP /g) (1000 g /kg) (1 mol/ 22.4 L STP) (1 L / 1000 cc)
+	loading_conversion["L(cm3STP/g)"]  = 1 / 22.4
 	# [(% mass) / 100 g Xe / g MOF](1 mol / MW_Xe g) (1000 g /1 kg)
-	loading_conversion[:PercentMass] = 1000.0 / 131.1 / 100.0
+	loading_conversion["PercentMass"] = 1000.0 / 131.1 / 100.0
 	# this one is an exception where xtal density not needed
 	# loading_conversion[Symbol("L(mol/L)")] = 1000.0 # (mol / L)(1000 L / m3)
 end
@@ -229,11 +229,14 @@ for xtal_name in xtal_names
 			xe_isotherms[xtal_name][!, common_loading_units] = xe_isotherms[xtal_name][:, col_name] * loading_conversion[col_name]
             # end 
 		end
+		
     end
-	
-	@assert common_loading_units in names(xe_isotherms[xtal_name])
-	@assert common_pressure_units in names(xe_isotherms[xtal_name])
+	@assert String(common_pressure_units) in names(xe_isotherms[xtal_name])
+	@assert String(common_loading_units) in names(xe_isotherms[xtal_name])
 end
+
+# ╔═╡ 12f4b7a0-602b-11eb-215a-f35d009e202f
+xe_isotherms
 
 # ╔═╡ fb3bb86c-0f5c-11eb-0438-57bba5356391
 md"finally, fit Langmuir models."
@@ -244,8 +247,8 @@ begin
 	xtal_to_M = Dict{String, Float64}()
 	for xtal_name in xtal_names
 	    lang_params = fit_adsorption_isotherm(xe_isotherms[xtal_name],
-			                                  common_pressure_units,
-	                                          common_loading_units, 
+			                                  Symbol(common_pressure_units),
+	                                          Symbol(common_loading_units), 
 			                                  :langmuir)
 		xtal_to_K[xtal_name] = lang_params["K"]
 		xtal_to_M[xtal_name] = lang_params["M"]
@@ -1194,8 +1197,8 @@ begin
 		"SBMOF-2"    => 733.69677,
 		"Co-formate" => 671.68882,
 		"MOF-505"    => 2226.68069,
-		"Activated-Carbon" => 0.0,
 		"NiPyC2"     => 1004.96685)
+	
 	# gravimetric surface area m²/g
 	gravimetric_sa = Dict(
 		"SBMOF-1"    => 302.83000,
@@ -1205,9 +1208,37 @@ begin
 		"SBMOF-2"    => 615.55891,
 		"Co-formate" => 368.75506,
 		"MOF-505"    => 2403.01824,
-		"Activated-Carbon" => 0.0,
 		"NiPyC2"     => 803.76080)
 end
+
+# ╔═╡ 8b63fa90-601f-11eb-0eb0-399d2061bf4a
+function sa_vs_tf()
+	figure(figsize=figsize)
+	xlabel("surface area [m²/g]") # gravimetric
+	ylabel("optimal tankage fraction")
+	
+	textss = []
+	for xtal_name in keys(gravimetric_sa)
+		sa = gravimetric_sa[xtal_name]
+		tf_opt = ads_opt[xtal_name]["tf"]
+	    scatter(sa, tf_opt; scatter_kwargs(xtal_name)...)
+		push!(textss,
+			  annotate(xtal_to_label[xtal_name], (sa, tf_opt), fontsize=10)
+		)
+	end
+		
+	ylim(ymin=0)
+	xlim(xmin=0)
+	tight_layout()
+	# xlim([0, 15])
+	# legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
+	savefig("figz/tf_vs_sa.pdf")#,                    
+		    # bbox_inches="tight")
+	gcf()
+end
+
+# ╔═╡ e1834580-6032-11eb-10f9-8f6cb03ab3ff
+sa_vs_tf()
 
 # ╔═╡ Cell order:
 # ╟─54e4a2c4-0b62-11eb-3e1d-017a70ae43d7
@@ -1234,6 +1265,7 @@ end
 # ╟─eed22218-0f5b-11eb-15a1-a75120aaf145
 # ╠═40efd702-0f5b-11eb-2970-c1ee6ac4eedf
 # ╠═0fdab85c-0f5c-11eb-2cec-69e1a95c6e45
+# ╠═12f4b7a0-602b-11eb-215a-f35d009e202f
 # ╟─fb3bb86c-0f5c-11eb-0438-57bba5356391
 # ╠═06ad0a18-0f5d-11eb-32bb-874fc19bb525
 # ╟─d336fcca-0f5f-11eb-3cb2-7f5c3f040f7b
@@ -1292,3 +1324,5 @@ end
 # ╠═5a9aff8e-3f57-11eb-127a-e934dbed5245
 # ╠═c20cffb0-5f84-11eb-2ccb-13bf2d86c3f2
 # ╠═d62e5cc6-5f84-11eb-0eae-7b76f75cc824
+# ╠═8b63fa90-601f-11eb-0eb0-399d2061bf4a
+# ╠═e1834580-6032-11eb-10f9-8f6cb03ab3ff

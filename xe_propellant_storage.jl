@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.19
+# v0.14.2
 
 using Markdown
 using InteractiveUtils
@@ -92,6 +92,7 @@ begin
 	df_xe = vcat(CSV.read(joinpath("data", "NIST_data", "low_pressure_xenon_NIST_data.txt"), DataFrame)[2:end, 2:3],
 	             CSV.read(joinpath("data", "NIST_data", "xenon_NIST_data.txt"), DataFrame)[:, 2:3])
 	df_xe[:, Symbol("Density (mol/m³)")] = df_xe[:, Symbol("Density (mol/l)")] * 1000 # convert L to m³
+	df_xe = df_xe[.! nonunique(df_xe), :]
 	sort!(df_xe, Symbol("Pressure (bar)"))
 	
 	first(df_xe, 3)

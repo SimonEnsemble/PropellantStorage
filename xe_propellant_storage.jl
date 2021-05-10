@@ -712,6 +712,15 @@ md"
 summarize
 "
 
+# ╔═╡ fb4d3de3-b40b-42f8-8400-b5c456d0482d
+md"all adsorbed systems are bigger than the bulk system..."
+
+# ╔═╡ 962987fa-f503-4413-a847-30e7b93902b7
+ads_opt["MOF-505"]["r [m]"]
+
+# ╔═╡ b6cb2bc6-7a7b-45fe-a088-b9104897f025
+bulk_opt["r [m]"]
+
 # ╔═╡ 1015e5fa-0dcd-11eb-3352-09bc6056a02f
 begin
 	function performance_plot()
@@ -761,7 +770,7 @@ close("all")
 # ╔═╡ a8b0c9c4-0dcd-11eb-2924-91b2875da4ea
 begin
 	ids = 1:length(xtal_names)
-	ids_sorted = sortperm([ads_opt[xtal]["tf"] for xtal in xtal_names])                      
+	ids_sorted = sortperm([ads_opt[xtal]["tf"] for xtal in xtal_names], rev=true)                      
 	figure()
 	xlabel("material")
 	ylabel("mass [kg]")
@@ -1305,6 +1314,9 @@ sa_vs_tf()
 # ╠═018c2b64-0da7-11eb-100a-4d1ee4e512f3
 # ╟─d182f874-18bb-11eb-28b8-ad20c019015e
 # ╠═e4ed9b6c-18bb-11eb-2796-8fe1689d5e35
+# ╟─fb4d3de3-b40b-42f8-8400-b5c456d0482d
+# ╠═962987fa-f503-4413-a847-30e7b93902b7
+# ╠═b6cb2bc6-7a7b-45fe-a088-b9104897f025
 # ╠═1015e5fa-0dcd-11eb-3352-09bc6056a02f
 # ╠═95054c18-2b93-11eb-0d17-3f8166d00547
 # ╠═af8c02fc-2b93-11eb-3e3e-8f4695ff5bbf

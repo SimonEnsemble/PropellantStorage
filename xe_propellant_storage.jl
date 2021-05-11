@@ -548,7 +548,7 @@ begin
 		# tankage fraction
 		ax3.plot(Ps, mₜ.(Ps) / mass_desired_xe_propellant, color="C3", 
 			linestyle="-", label="tank walls", lw=3)
-		ax3.set_ylabel(L"tankage fraction, $m_v/(n_{Xe}w_{Xe})$")
+		ax3.set_ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
 		ax3.set_xlabel(L"pressure, $P$ [bar]")
 		ax3.set_ylim(ymin=0.0)
 		ax3.annotate(#L"$(P_{opt}=$" * 
@@ -726,7 +726,7 @@ begin
 	function performance_plot()
 		figure(figsize=figsize)
 		xlabel(L"optimal storage pressure, $P_{opt}$ [bar]")
-		ylabel("optimal tankage fraction")
+		ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
 		texts = []
 		for xtal_name in xtal_names
 			p_opt = ads_opt[xtal_name]["P [bar]"]
@@ -864,7 +864,7 @@ how does tankage fraction relate to materials properties?
 begin
 	figure(figsize=figsize)
 	xlabel(L"density of material, $\rho_{ads}$ [kg/m$^3$]")
-	ylabel("optimal tankage fraction")
+	ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
 	texts = []
 	for xtal_name in xtal_names
 		ρ = xtal_to_ρ[xtal_name]
@@ -890,7 +890,7 @@ end
 begin
 	figure(figsize=figsize)
 	xlabel(L"Langmuir $K$ [1/bar]")
-	ylabel("optimal tankage fraction")
+	ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
 	textsss = []
 	for xtal_name in xtal_names
 		K = xtal_to_K[xtal_name]
@@ -916,7 +916,7 @@ end
 begin
 	figure(figsize=figsize)
 	xlabel(L"Langmuir $M$ [mol/kg]")
-	ylabel("optimal tankage fraction")
+	ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
 	
 	textss = []
 	for xtal_name in xtal_names
@@ -1161,7 +1161,7 @@ end
 function bulk_vs_xtal_ρ_on_tf()
 	figure(figsize=figsize)
 	xlabel(L"optimal storage pressure, $P_{opt}$ [bar]")
-	ylabel("optimal tankage fraction")
+	ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
 	texts = []
 	for xtal_name in keys(xtal_to_bulk_ρ)
 		xtal_name_bulk = xtal_name * "_bulk"
@@ -1231,7 +1231,7 @@ end
 function sa_vs_tf()
 	figure(figsize=figsize)
 	xlabel("surface area [m²/g]") # gravimetric
-	ylabel("optimal tankage fraction")
+	ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
 	
 	textss = []
 	for xtal_name in keys(gravimetric_sa)

@@ -548,7 +548,7 @@ begin
 		# tankage fraction
 		ax3.plot(Ps, mₜ.(Ps) / mass_desired_xe_propellant, color="C3", 
 			linestyle="-", label="tank walls", lw=3)
-		ax3.set_ylabel(L"optimal tankage fraction, $\mathcal{T}_{opt}$")
+		ax3.set_ylabel(L"tankage fraction, $\mathcal{T}$")
 		ax3.set_xlabel(L"pressure, $P$ [bar]")
 		ax3.set_ylim(ymin=0.0)
 		ax3.annotate(#L"$(P_{opt}=$" * 
